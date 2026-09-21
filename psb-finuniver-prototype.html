@@ -148,10 +148,6 @@ button{font-family:inherit;cursor:pointer}
 .tg-field .att,.tg-field .snd{color:var(--scr-muted-2);display:grid;place-items:center}
 .tg-field .snd{color:var(--accent)}
 .tg-field svg{width:20px;height:20px;display:block}
-.tg-numkey{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}
-.numk{background:#fff;border:1px solid var(--scr-line);border-radius:10px;padding:12px 0;font-size:17px;font-weight:600;font-family:var(--mono);color:var(--scr-txt)}
-.numk:hover{background:var(--scr-2)}
-.numk.act{background:var(--accent);color:#fff;border-color:var(--accent);font-size:12px;font-family:var(--sans)}
 
 /* ============ WEB APP ============ */
 .wa-header{flex:0 0 auto;display:flex;align-items:center;gap:10px;padding:9px 14px;background:var(--scr);border-bottom:1px solid var(--scr-line);min-height:46px}
@@ -540,12 +536,13 @@ button{font-family:inherit;cursor:pointer}
 var PARTICIPANT = { id:"482913", fio:"Иван Соколов", short:"Иван С." };
 
 var ACTS = [
-  { id:"plenary", t:"Пленарная сессия", ico:"🏛", pts:25 },
-  { id:"mk",      t:"Мастер-класс от эксперта", ico:"🎓", pts:15 },
+  /* selfScan: баллы даёт скан QR с экрана/ссылки на бота (deeplink-параметр), без участия менеджера */
+  { id:"plenary", t:"Пленарная сессия", ico:"🏛", pts:25, selfScan:true },
+  { id:"mk",      t:"Мастер-класс от эксперта", ico:"🎓", pts:15, selfScan:true },
   { id:"hr",      t:"HR-консультация", ico:"💼", pts:10 },
   { id:"reg",     t:"Заполнение анкеты / регистрация", ico:"📝", pts:1 },
   { id:"fast",    t:"Быстрые активности на фестивале", ico:"⚡", pts:1 },
-  { id:"enter",   t:"Вход на мероприятие", ico:"🚪", pts:null }, // баллы финализируются с ПСБ
+  { id:"enter",   t:"Вход на мероприятие", ico:"🚪", pts:null, selfScan:true }, // баллы финализируются с ПСБ
   /* точки трат — не мерч: безлимитные, списывает менеджер на месте, можно проходить многократно */
   { id:"coffee",  t:"Кофе",             ico:"☕", pts:-5, repeatable:true },
   { id:"photo",   t:"Фотобудка",        ico:"📸", pts:-2, repeatable:true },
@@ -650,7 +647,7 @@ var NOTES = {
 /* ----- Бот участника ----- */
 "bu-start":{ ico:"🚀", title:"/start · точка входа",
   purpose:"Единственный вход в систему. QR со стикеров по вузу и пост в паблике ВК ведут на deeplink <code>t.me/bot?start=src</code>. Факт входа = регистрация пользователя в системе — пуш-воронка стартует сразу, даже если анкету ниже он не заполнит.",
-  logic:["Параметр deeplink (<code>start=stolovaya</code>, <code>vk</code>, <code>lift</code>…) сохраняем как <b>источник</b> — пригодится в аналитике охвата.","Определяем <b>роль</b> по Telegram ID: участник / менеджер / тестер / админ. Незнакомый ID = участник.","Первое сообщение: короткий рассказ о боте + кнопка перехода к анкете (фамилия/имя → телефон → e-mail → согласие). Ничего лишнего — цель довести до Web App."],
+  logic:["Параметр deeplink (<code>start=stolovaya</code>, <code>vk</code>, <code>lift</code>…) сохраняем как <b>источник</b> — пригодится в аналитике охвата.","Тот же механизм используем для начисления баллов за пленарку/мастер-класс/вход: на экране/на входе висит QR со ссылкой вида <code>t.me/bot?start=plenary</code>. Участник сканирует его сам — заходя по такой ссылке, бот узнаёт параметр и сразу начисляет баллы за активность, менеджер тут не участвует (см. bm-act).","Определяем <b>роль</b> по Telegram ID: участник / менеджер / тестер / админ. Незнакомый ID = участник.","Первое сообщение: короткий рассказ о боте + кнопка перехода к анкете (фамилия/имя → телефон → e-mail → согласие). Ничего лишнего — цель довести до Web App."],
   states:[S("Новый","первый /start → рассказ + переход к анкете","var(--info)"),S("Повторный","/start после согласия → сразу меню с кнопкой Web App","var(--ok)")],
   open:[] },
 
@@ -709,15 +706,15 @@ var NOTES = {
   open:[] },
 
 "bm-act":{ ico:"📍", title:"Выбор активности / точки",
-  purpose:"Перед отметкой менеджер выбирает, что именно засчитывает — от этого зависит число баллов. Список делится на две группы: <b>начисление</b> (пленарка, МК, HR…) и <b>списание</b> (кофе/фото/караоке) — технически это те же активности, только с отрицательными баллами.",
-  logic:["Список типов точек с баллами из ТЗ: пленарка 25, мастер-класс 15, HR 10, быстрые 1, вход (баллы уточняются).","Кофе −5, фотобудка −2, караоке −2 — считаются активностями (<code>ACTS</code>), не позициями магазина: у них нет остатка/лимита и их не оформляют заранее в Web App, менеджер списывает баллы на месте по ID/QR так же, как начисляет за пленарку.","Активности и их стоимость настраиваются в админке; бот подтягивает актуальный список.","Опц. «золотой час»: у точки может быть временное окно с множителем (x2) — под вопросом, скорее не в v1."],
+  purpose:"Перед отметкой менеджер выбирает, что именно засчитывает — от этого зависит число баллов. В списке только точки, которые физически обслуживает промо-персонал: <b>HR-консультация</b> и <b>быстрые активности на фестивале</b>, плюс блок <b>списания</b> (кофе/фото/караоке).",
+  logic:["Пленарка, мастер-классы и вход <b>сюда не входят</b> — баллы за них участник получает сам, сканируя QR с экрана/на входе (ссылка на бота с deeplink-параметром, см. bu-start), без участия менеджера. В данных это флаг <code>selfScan:true</code> у активности.","HR-консультация 10, быстрые активности 1 — из ТЗ.","Кофе −5, фотобудка −2, караоке −2 — считаются активностями (<code>ACTS</code>), не позициями магазина: у них нет остатка/лимита и их не оформляют заранее в Web App, менеджер списывает баллы на месте по ID/QR так же, как начисляет за HR-консультацию.","Активности и их стоимость настраиваются в админке; бот подтягивает актуальный список.","Опц. «золотой час»: у точки может быть временное окно с множителем (x2) — под вопросом, скорее не в v1."],
   states:[S("Выбор","инлайн-список точек, начисление и списание отдельными блоками","var(--info)")],
-  open:["Баллы за «Вход на мероприятие» — финализируются с ПСБ.","«Золотой час» (множитель) — под вопросом на v1."] },
+  open:["Баллы за «Вход на мероприятие» — финализируются с ПСБ.","«Золотой час» (множитель) — под вопросом на v1.","Техническая реализация самосканирования (валидность QR по времени, защита от пересланных фото/скриншотов) — обсуждается с Эдиком, не финализирована."] },
 
 "bm-id":{ ico:"🔢", title:"Ввод ID / скан QR",
   purpose:"Менеджер вводит 5–7-значный ID участника (основной способ — ради скорости) или сканирует его персональный QR.",
-  logic:["Ввод числом с клавиатуры или <b>Сканировать QR</b> (камера Telegram).","По ID/QR находим участника и показываем карточку перед начислением.","Валидация: несуществующий ID → ошибка; уже отмечен на этой точке → блок повторного начисления."],
-  states:[S("Ввод","поле + клавиатура + скан","var(--info)")],
+  logic:["Ввод — обычным сообщением через штатную клавиатуру Telegram, без кастомной цифровой клавиатуры на экране: тут это просто текст, который бот парсит.","Альтернатива — кнопка <b>Сканировать QR</b> (камера Telegram).","По ID/QR находим участника и показываем карточку перед начислением/списанием.","Валидация: несуществующий ID → ошибка; уже отмечен на разовой точке → блок повторного начисления (не касается кофе/фото/караоке, см. bm-act/bm-dup)."],
+  states:[S("Ввод","поле ввода + скан","var(--info)")],
   open:[] },
 
 "bm-ok":{ ico:"✅", title:"Начисление · успех",
@@ -733,8 +730,8 @@ var NOTES = {
   open:[] },
 
 "bm-dup":{ ico:"⛔", title:"Краевое · уже отмечен",
-  purpose:"Повторная отметка того же участника на той же точке — защита от накрутки. Применяется только к разовым активностям начисления.",
-  logic:["Показываем время предыдущей отметки, повторное начисление невозможно.","Правило антифрода настраивается: разовые точки (пленарка, вход, МК, HR) — строго 1 раз; «быстрые активности» — политику повторов уточнить.","Кофе/фото/караоке из этого правила исключены: это точки списания с флагом <code>repeatable</code>, их можно отмечать сколько угодно раз — антифрод-блок к ним не применяется."],
+  purpose:"Повторная отметка того же участника на той же точке — защита от накрутки. В этом (менеджерском) экране применяется к HR-консультации и быстрым активностям — это единственные точки начисления, которые вообще проходят через менеджера.",
+  logic:["Показываем время предыдущей отметки, повторное начисление невозможно.","Правило антифрода настраивается: разовые точки (HR) — строго 1 раз; «быстрые активности» — политику повторов уточнить.","Пленарка/МК/вход сюда не попадают — у них антифрод не менеджерский: это защита на стороне бота при самосканировании QR (см. bu-start, bm-act), а не этот экран.","Кофе/фото/караоке из этого правила исключены: это точки списания с флагом <code>repeatable</code>, их можно отмечать сколько угодно раз — антифрод-блок к ним не применяется."],
   states:[S("Блок","дубль отклонён","var(--bad)")],
   open:["Можно ли одну «быструю активность» засчитывать несколько раз — уточнить у клиента."] },
 
@@ -798,7 +795,7 @@ var NOTES = {
 
 "wa-activities":{ ico:"🗺", title:"Карта активностей",
   purpose:"Где что проходит и сколько баллов даёт. Сама карта — <b>статичное изображение</b> от ПСБ (не интерактивная схема с кликабельными точками); список точек и их статус — под картой, обычными карточками.",
-  logic:["Картинка карты — просто вставленное изображение (img/SVG-плейсхолдер), без координат и кликов по точкам.","Точки с баллами из ТЗ выводим списком под картой. Отметку ставит <b>менеджер</b> (скан/ID) — не сам участник, не клик по карте.","Кофе/фото/караоке — отдельный блок «Потратить баллы»: в отличие от заработка это безлимитные точки, их можно проходить многократно, баллы каждый раз списывает менеджер на месте (см. bm-act/bm-dup) — не отображаем как «пройдено/доступно», статуса тут нет.","«Пройдено» (для точек заработка) подтягивается из транзакций начисления."],
+  logic:["Картинка карты — просто вставленное изображение (img/SVG-плейсхолдер), без координат и кликов по точкам.","Точки с баллами из ТЗ выводим списком под картой. Два способа получить баллы: пленарка/МК/вход — сам участник сканирует QR с экрана (без менеджера), HR-консультацию и фестивальные активности отмечает <b>менеджер</b> по ID/QR участника.","Кофе/фото/караоке — отдельный блок «Потратить баллы»: в отличие от заработка это безлимитные точки, их можно проходить многократно, баллы каждый раз списывает менеджер на месте (см. bm-act/bm-dup) — не отображаем как «пройдено/доступно», статуса тут нет.","«Пройдено» (для точек заработка) подтягивается из транзакций начисления."],
   states:[S("Доступно","точка не пройдена","var(--info)"),S("Пройдено","баллы начислены","var(--ok)"),S("Множитель","золотой час x2 (опц.)","var(--gold)")],
   open:["Финальное изображение карты — ждём от ПСБ/клиента; сейчас плейсхолдер.","«Золотой час» — под вопросом на v1, склоняемся отказаться (нелинейно из-за лимита мест на МК)."] },
 
@@ -809,7 +806,7 @@ var NOTES = {
   open:["Финальный баланс/стоимости баллов финализируются с ПСБ."] },
 
 "wa-shop":{ ico:"🛍", title:"Магазин мерча",
-  purpose:"Внутренняя валюта — баллы. Студент сам выбирает позицию по цене. Призовой фонд ~500 шт, 7 позиций физического мерча — только он оформляется здесь, обменом заранее.",
+  purpose:"Внутренняя валюта — баллы. Студент сам выбирает позицию по цене. 7 позиций физического мерча — только он оформляется здесь, обменом заранее (точный тираж — по остаткам ниже, суммарную цифру на экране не показываем).",
   logic:["Цены и остатки из ТЗ; остатки уменьшаются при оформлении.","Кофе/фотобудка/караоке здесь <b>не показываем</b> — это не магазин: лимита у них нет, заранее в приложении их не «покупают». Баллы за них списывает менеджер на месте по ID/QR (см. bm-act) как отдельную активность с отрицательными баллами.","Состояния карточки: доступно / не хватает баллов / закончилось."],
   states:[S("Доступно","хватает баллов и есть остаток","var(--ok)"),S("Не хватает","цена > баланса","var(--warn)"),S("Закончилось","остаток 0","var(--bad)")],
   open:[] },
@@ -1091,7 +1088,7 @@ R.bmMenu=function(){
 
 R.bmAct=function(){
   markNav("bmAct"); setNotes("bm-act"); mgrCtx.mode="mark"; mgrCtx.actId=null; mgrCtx.entered="";
-  var earnBtns=ACTS.filter(function(a){return a.id!=="reg"&&a.pts>=0;}).map(function(a){
+  var earnBtns=ACTS.filter(function(a){return a.id!=="reg"&&a.pts>=0&&!a.selfScan;}).map(function(a){
     return {t:a.ico+" "+a.t, sub:ptsLabel(a), act:"mgrPickAct", d:{a:a.id}};
   });
   var spendBtns=ACTS.filter(function(a){return a.pts<0;}).map(function(a){
@@ -1101,6 +1098,7 @@ R.bmAct=function(){
     mOut("✅ Отметить участника","13:58")+
     mIn("Выбери точку/активность, которую засчитываешь:","13:58")+
     ik(earnBtns)+
+    mIn("Пленарку, мастер-классы и вход здесь не начисляем — участник сам сканирует QR с экрана/на входе (ссылка на бота с параметром), баллы начисляются автоматически, без менеджера.","13:58")+
     mIn("Точки трат (кофе/фото/караоке) — можно списывать многократно, антифрод-блок не применяется:","13:58")+
     ik(spendBtns)
   );
@@ -1112,31 +1110,16 @@ function bmEnterScreen(){
   var a=actById(mgrCtx.actId);
   chatSet("#chatMgr",
     mOut((mgrCtx.mode==="merch"?"🎁 Выдать мерч":"✅ "+(a?a.t:"")) ,"13:59")+
-    mIn("Введи <b>5–7-значный ID</b> участника или отсканируй его QR.","13:59")+
-    keypadBlock()
+    mIn("Введи <b>5–7-значный ID</b> участника или отсканируй его QR.","13:59")
   );
   $("#inputMgr").innerHTML=
     '<div class="rk one"><button class="rk-btn wide" data-act="mgrScan">📷 Сканировать QR</button></div>'+
     '<div style="font-size:11px;color:var(--scr-muted);text-align:center;margin:2px 0 6px">быстрые сценарии для демо:</div>'+
     '<div class="rk"><button class="rk-btn" data-act="mgrDemo" data-v="482913">482913 · Иван</button>'+
-    '<button class="rk-btn" data-act="mgrDemo" data-v="000000">000000 · нет</button></div>';
-  updKeypadDisplay();
+    '<button class="rk-btn" data-act="mgrDemo" data-v="000000">000000 · нет</button></div>'+
+    PLAIN_FIELD;
 }
-R.bmEnter=function(){ if(!mgrCtx.mode){mgrCtx.mode="mark";} if(!mgrCtx.actId&&mgrCtx.mode==="mark"){mgrCtx.actId="plenary";} mgrCtx.entered=""; bmEnterScreen(); };
-
-function keypadBlock(){
-  var keys=["1","2","3","4","5","6","7","8","9","⌫","0","OK"];
-  var h='<div class="ik" style="background:#fff;border-radius:12px;padding:10px;gap:8px">'+
-    '<div style="text-align:center;font-family:var(--mono);font-size:22px;font-weight:700;letter-spacing:4px;color:#111;min-height:28px" id="kpDisp">—</div>'+
-    '<div class="tg-numkey">';
-  keys.forEach(function(k){
-    var cls = (k==="OK"?"numk act":"numk");
-    h+='<button class="'+cls+'" data-act="mgrKey" data-k="'+k+'">'+k+'</button>';
-  });
-  h+='</div></div>';
-  return h;
-}
-function updKeypadDisplay(){ var d=$("#kpDisp"); if(d) d.textContent = mgrCtx.entered||"—"; }
+R.bmEnter=function(){ if(!mgrCtx.mode){mgrCtx.mode="mark";} if(!mgrCtx.actId&&mgrCtx.mode==="mark"){mgrCtx.actId="hr";} mgrCtx.entered=""; bmEnterScreen(); };
 
 function mgrResolve(){
   var id=mgrCtx.entered;
@@ -1157,7 +1140,7 @@ function mgrResolve(){
 
 R.bmOk=function(){
   markNav("bmOk"); setNotes("bm-ok");
-  var a=actById(mgrCtx.actId&&mgrCtx.actId!=="reg"?mgrCtx.actId:"mk"); if(!a)a=actById("mk");
+  var a=actById(mgrCtx.actId&&mgrCtx.actId!=="reg"?mgrCtx.actId:"hr"); if(!a)a=actById("hr");
   var verb = a.pts<0 ? "Списано" : "Начислено";
   chatSet("#chatMgr",
     mIn('✅ <b>'+verb+' '+ptsLabel(a)+'</b><br>'+esc(PARTICIPANT.short)+' · '+esc(a.t)+'<br>Новый баланс: <b>'+balance()+' б.</b>',"14:01")+
@@ -1178,7 +1161,7 @@ R.bmNotFound=function(){
 
 R.bmDup=function(){
   markNav("bmDup"); setNotes("bm-dup");
-  var a=actById(mgrCtx.actId&&mgrCtx.actId!=="reg"?mgrCtx.actId:"plenary")||actById("plenary");
+  var a=actById(mgrCtx.actId&&mgrCtx.actId!=="reg"?mgrCtx.actId:"hr")||actById("hr");
   var when=(state.marked[a.id]&&state.marked[a.id].t)||"13:12";
   chatSet("#chatMgr",
     mOut("ID: 482913","14:05")+
@@ -1391,8 +1374,9 @@ function waActivities(){
   var spendActs=ACTS.filter(function(a){return a.pts<0;});
   var rows=earnActs.map(function(a){
     var isDone=done[a.id];
-    var chip = a.id==="enter" ? '<span class="chip gray">баллы уточн.</span>' : (isDone?'<span class="chip ok">пройдено</span>':'<span class="chip info">доступно</span>');
-    return '<div class="row"><div class="r-ico">'+a.ico+'</div><div class="r-m"><div class="r-t">'+esc(a.t)+'</div><div class="r-s">'+(a.id==="enter"?"фиксирует менеджер":(isDone?"баллы начислены":"отметит менеджер по QR/ID"))+'</div></div><div class="r-r"><div class="pts'+(a.pts==null?" dim":"")+'">'+ptsLabel(a)+'</div>'+chip+'</div></div>';
+    var chip = a.pts==null ? '<span class="chip gray">баллы уточн.</span>' : (isDone?'<span class="chip ok">пройдено</span>':'<span class="chip info">доступно</span>');
+    var desc = isDone ? "баллы начислены" : (a.selfScan ? "сканируй QR с экрана / на входе" : "отметит менеджер по QR/ID");
+    return '<div class="row"><div class="r-ico">'+a.ico+'</div><div class="r-m"><div class="r-t">'+esc(a.t)+'</div><div class="r-s">'+desc+'</div></div><div class="r-r"><div class="pts'+(a.pts==null?" dim":"")+'">'+ptsLabel(a)+'</div>'+chip+'</div></div>';
   }).join("");
   var spendRows=spendActs.map(function(a){
     return '<div class="row"><div class="r-ico">'+a.ico+'</div><div class="r-m"><div class="r-t">'+esc(a.t)+'</div><div class="r-s">без лимита посещений · списывает менеджер по QR/ID на месте</div></div><div class="r-r"><div class="pts dim">'+ptsLabel(a)+'</div></div></div>';
@@ -1401,7 +1385,7 @@ function waActivities(){
     '<div class="map">'+
       '<div class="map-ico">🗺</div><div class="map-t">Карта активностей</div><div class="map-s">статичное изображение от ПСБ · не интерактивно</div>'+
     '</div>'+
-    '<div class="note info"><span class="n-i">🧭</span><span>Отметку на точке ставит <b>менеджер</b> по твоему QR/ID. Сам себя отметить нельзя.</span></div>'+
+    '<div class="note info"><span class="n-i">🧭</span><span>Пленарку, мастер-классы и вход засчитываем по скану твоего QR с экрана/на входе — менеджер тут не участвует. HR-консультацию и фестивальные активности отмечает <b>менеджер</b> по твоему QR/ID.</span></div>'+
     '<div class="sec-t">Заработать баллы</div><div class="card">'+rows+'</div>'+
     '<div class="sec-t">Потратить баллы</div><div class="card">'+spendRows+'</div>'+
   '</div>';
@@ -1439,7 +1423,7 @@ function waShop(){
   }).join("");
   return '<div class="wa-screen">'+
     '<div class="balance" style="margin-top:0"><div class="coin">Б</div><div class="bl"><div class="bl-n">'+bal+'</div><div class="bl-l">баллов · выбирай позицию по цене</div></div><button class="bl-go" data-act="waTo" data-id="orders">Заказы →</button></div>'+
-    '<div class="sec-t">Призовой фонд <span class="st-r"> ~500 шт</span></div>'+
+    '<div class="sec-t">Призовой фонд</div>'+
     '<div class="shop-grid">'+cards+'</div>'+
     '<div class="note info" style="margin-top:14px"><span class="n-i">📦</span><span>Оформи обмен → покажи QR на стойке (1 этаж) → менеджер выдаст.</span></div>'+
   '</div>';
@@ -1569,15 +1553,8 @@ var ACTIONS={
 
   /* bot manager */
   mgrPickAct:function(d){ mgrCtx.mode="mark"; mgrCtx.actId=d.a; bmEnterScreen(); },
-  mgrKey:function(d){
-    var k=d.k;
-    if(k==="⌫") mgrCtx.entered=mgrCtx.entered.slice(0,-1);
-    else if(k==="OK"){ if(mgrCtx.entered.length>=5) mgrResolve(); else flash("#kpDisp"); return; }
-    else if(mgrCtx.entered.length<7) mgrCtx.entered+=k;
-    updKeypadDisplay();
-  },
-  mgrDemo:function(d){ mgrCtx.entered=d.v; updKeypadDisplay(); setTimeout(mgrResolve,150); },
-  mgrScan:function(){ mgrCtx.entered="482913"; updKeypadDisplay(); chatAdd("#chatMgr", mOut("📷 QR отсканирован","14:00")); setTimeout(mgrResolve,200); },
+  mgrDemo:function(d){ mgrCtx.entered=d.v; setTimeout(mgrResolve,150); },
+  mgrScan:function(){ mgrCtx.entered="482913"; chatAdd("#chatMgr", mOut("📷 QR отсканирован","14:00")); setTimeout(mgrResolve,200); },
   mgrConfirmMark:function(){
     var a=actById(mgrCtx.actId); if(!a)return;
     if(a.repeatable){ state.earned.push({act:a.id,pts:a.pts,t:"14:01"}); }
@@ -1664,7 +1641,6 @@ function toast(t){
   document.body.appendChild(el); requestAnimationFrame(function(){el.style.opacity="1";});
   setTimeout(function(){ el.style.opacity="0"; setTimeout(function(){el.remove();},250); },1700);
 }
-function flash(sel){ var e=$(sel); if(!e)return; e.style.color="#f0483e"; setTimeout(function(){e.style.color="";},400); }
 
 /* =========================================================================
    Верхняя панель, шторки, инициализация

@@ -202,10 +202,6 @@ button{font-family:inherit;cursor:pointer}
 .muted{color:var(--scr-muted)}
 .wa-lead{font-size:13.5px;color:var(--scr-txt);line-height:1.5}
 
-/* progress */
-.prog{height:10px;border-radius:999px;background:var(--scr-3);overflow:hidden;margin:10px 0 6px}
-.prog>i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),#ff9a52);border-radius:999px}
-
 /* list rows */
 .row{display:flex;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid var(--scr-line)}
 .row:last-child{border-bottom:0}
@@ -807,8 +803,8 @@ var NOTES = {
   open:["Финальное изображение карты — ждём от ПСБ/клиента; сейчас плейсхолдер.","«Золотой час» — под вопросом на v1, склоняемся отказаться (нелинейно из-за лимита мест на МК)."] },
 
 "wa-points":{ ico:"⭐", title:"Баллы и прогресс",
-  purpose:"Баланс, история начислений/трат, прогресс до следующей награды. Геймификация = мотивация проходить точки.",
-  logic:["История = лог транзакций (начисления менеджером + траты в магазине).","Прогресс-бар до ближайшей желаемой позиции мерча.","Баланс = начислено − потрачено (оформленные заказы)."],
+  purpose:"Баланс и история начислений/трат. Геймификация = мотивация проходить точки.",
+  logic:["История = лог транзакций (начисления менеджером + траты в магазине и на точках-фестивале).","Баланс = начислено − потрачено (оформленные заказы мерча + списания на месте).","Без прогресс-бара «до подарка»: у товаров разная цена и у каждого свой список желаний — единая жёстко зашитая цель (например, всегда «Толстовка») выглядела бы произвольной и странной, когда баланс её уже перекрыл."],
   states:[S("Есть история","начисления и траты","var(--ok)"),S("Пусто","нет активностей → подсказка как заработать","var(--muted-2)")],
   open:["Финальный баланс/стоимости баллов финализируются с ПСБ."] },
 
@@ -1413,8 +1409,6 @@ function waActivities(){
 
 function waPoints(){
   var bal=balance();
-  var target=merchById("hoodie");
-  var pct=Math.min(100,Math.round(bal/target.price*100));
   var hist=state.earned.map(function(x){ var a=actById(x.act); return {t:(a?a.t:x.act),ico:(a?a.ico:"⭐"),pts:x.pts,time:x.t}; });
   state.reservations.forEach(function(r){ var m=merchById(r.itemId); hist.push({t:"Обмен: "+m.t,ico:m.emo,pts:-m.price,time:r.t}); });
   var rows=hist.map(function(h){
@@ -1423,7 +1417,6 @@ function waPoints(){
   }).join("");
   return '<div class="wa-screen">'+
     '<div class="balance" style="margin-top:0"><div class="coin">Б</div><div class="bl"><div class="bl-n">'+bal+'</div><div class="bl-l">баллов на балансе</div></div></div>'+
-    '<div class="card" style="margin-top:12px"><div style="display:flex;justify-content:space-between;font-size:12.5px"><span class="muted">До «'+target.t+'» ('+target.price+' б.)</span><b>'+bal+'/'+target.price+'</b></div><div class="prog"><i style="width:'+pct+'%"></i></div><div style="font-size:11.5px" class="muted">Ещё '+Math.max(0,target.price-bal)+' баллов — пройди мастер-класс или HR-консультацию.</div></div>'+
     '<div class="sec-t">История</div><div class="card">'+(rows||'<div class="muted" style="text-align:center;padding:14px">Пока пусто</div>')+'</div>'+
   '</div>';
 }

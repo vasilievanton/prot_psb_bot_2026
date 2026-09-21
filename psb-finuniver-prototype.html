@@ -1,0 +1,1645 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<title>ПСБ Финунивер · Прототип</title>
+<style>*{box-sizing:border-box}:root{color-scheme:light}html,body{height:100%}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<style>
+/* ============ TOKENS (committed dark studio + light device screens) ============ */
+:root{
+  --accent:#FF5A00; --accent-600:#E85200; --accent-700:#C64600;
+  --accent-tint:#FFE7D8; --accent-weak:#31210f;
+  --studio:#0F1116; --panel:#171A21; --panel-2:#1D212A; --panel-3:#232834;
+  --line:#2A2F3A; --line-2:#39404E;
+  --txt:#E9EBEF; --muted:#98A2B3; --muted-2:#6A7383;
+  --ok:#31C07A; --warn:#F5A623; --bad:#F0483E; --info:#4C8DFF; --gold:#F7B500;
+  /* device light screen */
+  --scr:#FFFFFF; --scr-2:#F4F5F7; --scr-3:#ECEEF1; --scr-line:#E6E8EC;
+  --scr-txt:#14171C; --scr-muted:#767C86; --scr-muted-2:#9AA0A9;
+  /* telegram chat */
+  --tg-bg:#DFE4EA; --tg-in:#FFFFFF; --tg-out:#E8FCCF; --tg-txt:#14171C;
+  --tg-time:#8A93A0;
+  --r:14px; --r-sm:10px; --r-lg:20px;
+  --shadow:0 10px 30px rgba(0,0,0,.35);
+  --shadow-sm:0 2px 8px rgba(0,0,0,.10);
+  --sans:"Golos Text",-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,"SF Mono",Consolas,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--studio);color:var(--txt);font-family:var(--sans);font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;cursor:pointer}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:#2c323d;border-radius:20px;border:2px solid transparent;background-clip:content-box}
+::-webkit-scrollbar-thumb:hover{background:#3a4150;background-clip:content-box}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* ============ APP SHELL ============ */
+.app{display:flex;flex-direction:column;height:100%}
+.topbar{display:flex;align-items:center;gap:14px;padding:10px 16px;background:linear-gradient(180deg,#161922,#12151c);border-bottom:1px solid var(--line);flex:0 0 auto;z-index:40}
+.brand{display:flex;align-items:center;gap:11px;min-width:0}
+.logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(145deg,var(--accent),#ff8a3d);display:grid;place-items:center;font-weight:800;color:#fff;font-size:15px;box-shadow:0 4px 12px rgba(255,90,0,.35);flex:0 0 auto}
+.brand .b-t{font-weight:700;font-size:14px;letter-spacing:.2px;white-space:nowrap}
+.brand .b-s{font-size:11px;color:var(--muted-2);letter-spacing:.4px;text-transform:uppercase}
+.surfaces{display:flex;gap:4px;background:#0e1117;border:1px solid var(--line);padding:4px;border-radius:12px;margin:0 auto}
+.surf-btn{border:0;background:transparent;color:var(--muted);padding:8px 14px;border-radius:9px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;transition:.15s;white-space:nowrap}
+.surf-btn .dot{width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.5}
+.surf-btn:hover{color:var(--txt)}
+.surf-btn.active{background:var(--accent);color:#fff;box-shadow:0 4px 12px rgba(255,90,0,.35)}
+.surf-btn.active .dot{opacity:1;background:#fff}
+.top-actions{display:flex;gap:8px;align-items:center;flex:0 0 auto}
+.tbtn{border:1px solid var(--line-2);background:var(--panel-2);color:var(--muted);padding:8px 12px;border-radius:9px;font-size:12.5px;font-weight:600;display:flex;align-items:center;gap:7px;transition:.15s}
+.tbtn:hover{color:var(--txt);border-color:#4a5262}
+.tbtn.on{color:var(--accent);border-color:var(--accent);background:var(--accent-weak)}
+.tbtn svg{width:15px;height:15px}
+
+/* ============ WORK AREA ============ */
+.work{flex:1 1 auto;display:flex;min-height:0}
+.rail{flex:0 0 288px;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+.rail.notes{border-right:0;border-left:1px solid var(--line);flex-basis:340px}
+.rail-head{padding:16px 18px 12px;border-bottom:1px solid var(--line);flex:0 0 auto}
+.rail-head .rh-t{font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted-2);font-weight:700}
+.rail-head .rh-s{font-size:12.5px;color:var(--muted);margin-top:4px}
+.rail-body{overflow-y:auto;padding:12px;flex:1 1 auto}
+
+/* nav */
+.nav-group{margin-bottom:6px}
+.nav-g-t{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted-2);font-weight:700;padding:12px 10px 6px;display:flex;align-items:center;gap:8px}
+.nav-g-t .gline{flex:1;height:1px;background:var(--line)}
+.nav-item{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;background:transparent;color:var(--muted);padding:9px 11px;border-radius:9px;font-size:13px;font-weight:500;transition:.12s;border-left:2px solid transparent}
+.nav-item:hover{background:var(--panel-2);color:var(--txt)}
+.nav-item.active{background:var(--accent-weak);color:#ffd9bf;border-left-color:var(--accent)}
+.nav-item .ni-ico{width:22px;height:22px;border-radius:6px;background:var(--panel-3);display:grid;place-items:center;font-size:12px;flex:0 0 auto;color:var(--muted)}
+.nav-item.active .ni-ico{background:var(--accent);color:#fff}
+.nav-item .ni-tag{margin-left:auto;font-size:10px;font-weight:700;padding:2px 6px;border-radius:6px;background:var(--panel-3);color:var(--muted-2)}
+.nav-item .ni-tag.edge{background:#3a2323;color:#ff9d95}
+
+/* ============ STAGE / PHONE ============ */
+.stage{flex:1 1 auto;min-width:0;display:flex;align-items:center;justify-content:center;padding:26px;overflow:auto;position:relative;
+  background:radial-gradient(1200px 600px at 50% -10%,#1a1f2b 0,transparent 60%),var(--studio)}
+.stage-hint{position:absolute;top:14px;left:50%;transform:translateX(-50%);font-size:11.5px;color:var(--muted-2);background:var(--panel);border:1px solid var(--line);padding:5px 12px;border-radius:999px;letter-spacing:.2px}
+.phone{width:392px;max-width:100%;height:820px;max-height:calc(100vh - 120px);background:#000;border-radius:44px;padding:11px;box-shadow:var(--shadow),0 0 0 2px #23272f, inset 0 0 0 1px #000;flex:0 0 auto;position:relative}
+.screen-wrap{position:relative;width:100%;height:100%;background:var(--scr);border-radius:34px;overflow:hidden;display:flex;flex-direction:column}
+.notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:132px;height:26px;background:#000;border-radius:0 0 16px 16px;z-index:30}
+.statusbar{flex:0 0 auto;height:30px;display:flex;align-items:center;justify-content:space-between;padding:0 22px 0 24px;font-size:12px;font-weight:600;color:var(--scr-txt);background:var(--scr)}
+.statusbar .sb-r{display:flex;gap:6px;align-items:center}
+.statusbar svg{width:16px;height:12px;display:block}
+.surface-root{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
+.surface-root[hidden]{display:none!important}
+
+/* ---- Telegram header ---- */
+.tg-header{flex:0 0 auto;display:flex;align-items:center;gap:11px;padding:8px 12px;background:var(--scr);border-bottom:1px solid var(--scr-line)}
+.tg-back{width:26px;height:26px;color:#4b7bec;display:grid;place-items:center;flex:0 0 auto}
+.tg-back svg{width:18px;height:18px}
+.tg-ava{width:38px;height:38px;border-radius:50%;background:linear-gradient(145deg,var(--accent),#ff9a52);display:grid;place-items:center;color:#fff;font-weight:800;font-size:13px;flex:0 0 auto}
+.tg-h-t{font-weight:700;font-size:14.5px;color:var(--scr-txt);line-height:1.1}
+.tg-h-s{font-size:12px;color:#4b7bec}
+.tg-h-s.muted{color:var(--scr-muted)}
+.tg-h-r{margin-left:auto;display:flex;gap:16px;color:var(--scr-muted-2)}
+.tg-h-r svg{width:19px;height:19px}
+
+/* ---- Telegram chat ---- */
+.tg-chat{flex:1 1 auto;min-height:0;overflow-y:auto;padding:14px 12px 16px;display:flex;flex-direction:column;gap:3px;
+  background:
+   radial-gradient(circle at 20% 10%,rgba(255,255,255,.5),transparent 30%),
+   linear-gradient(180deg,#d9dfe6,#cdd4dd);
+  background-color:var(--tg-bg)}
+.tg-chat .day{align-self:center;background:rgba(90,100,115,.55);color:#fff;font-size:11px;font-weight:600;padding:3px 11px;border-radius:999px;margin:4px 0 8px;backdrop-filter:blur(2px)}
+.msg{max-width:84%;padding:7px 11px 5px;border-radius:15px;font-size:13.5px;line-height:1.4;color:var(--tg-txt);position:relative;box-shadow:0 1px 1px rgba(0,0,0,.08);animation:pop .18s ease}
+@keyframes pop{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.msg.in{align-self:flex-start;background:var(--tg-in);border-bottom-left-radius:5px}
+.msg.out{align-self:flex-end;background:var(--tg-out);border-bottom-right-radius:5px}
+.msg .time{font-size:10px;color:var(--tg-time);float:right;margin:3px 0 -2px 8px;position:relative;top:3px}
+.msg.out .time{color:#6ba03a}
+.msg b{font-weight:700}
+.msg .mono{font-family:var(--mono)}
+.msg .push-tag{display:inline-block;font-size:9.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--accent);background:var(--accent-tint);padding:2px 7px;border-radius:6px;margin-bottom:5px}
+.msg .qrbox{margin:6px 0 3px;background:#fff;border:1px solid var(--scr-line);border-radius:10px;padding:10px;display:flex;flex-direction:column;align-items:center;gap:6px}
+.msg .qrbox .idbig{font-family:var(--mono);font-weight:700;font-size:20px;letter-spacing:3px;color:#111}
+.msg.svc{align-self:center;background:rgba(90,100,115,.5);color:#fff;font-size:11.5px;padding:5px 12px;border-radius:12px;box-shadow:none;text-align:center;max-width:90%}
+.pin{align-self:stretch;margin:-6px -12px 8px;padding:7px 12px 7px 40px;background:rgba(255,255,255,.85);border-bottom:1px solid var(--scr-line);position:relative;font-size:12px;color:var(--scr-txt)}
+.pin::before{content:"📌";position:absolute;left:14px;top:7px}
+.pin .pt{font-weight:700;color:var(--accent);font-size:10px;text-transform:uppercase;letter-spacing:.4px}
+
+/* inline keyboard */
+.ik{align-self:stretch;display:flex;flex-direction:column;gap:6px;margin:2px 0 6px}
+.ik.grid2{display:grid;grid-template-columns:1fr 1fr}
+.ik-btn{border:0;background:rgba(255,255,255,.92);color:#2a7fff;font-weight:600;font-size:13px;padding:11px 10px;border-radius:11px;box-shadow:0 1px 2px rgba(0,0,0,.10);transition:.12s;display:flex;align-items:center;justify-content:center;gap:7px;text-align:center}
+.ik-btn:hover{background:#fff;transform:translateY(-1px)}
+.ik-btn.webapp{background:var(--accent);color:#fff;box-shadow:0 3px 10px rgba(255,90,0,.35)}
+.ik-btn.webapp:hover{background:var(--accent-600)}
+.ik-btn.ghost{color:var(--scr-muted);font-weight:500}
+.ik-btn small{opacity:.7;font-weight:500}
+
+/* reply keyboard */
+.tg-input{flex:0 0 auto;background:#f6f7f9;border-top:1px solid var(--scr-line);padding:8px 10px 10px}
+.rk{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:8px}
+.rk.one{grid-template-columns:1fr}
+.rk-btn{background:#fff;border:1px solid var(--scr-line);border-radius:10px;padding:11px 8px;font-size:13px;font-weight:600;color:var(--scr-txt);display:flex;align-items:center;justify-content:center;gap:7px}
+.rk-btn:hover{background:var(--scr-2)}
+.rk-btn.wide{grid-column:1/-1}
+.tg-field{display:flex;align-items:center;gap:9px;background:#fff;border:1px solid var(--scr-line);border-radius:22px;padding:9px 12px}
+.tg-field input{flex:1;border:0;outline:0;font-size:13.5px;font-family:inherit;background:transparent;color:var(--scr-txt)}
+.tg-field .att,.tg-field .snd{color:var(--scr-muted-2);display:grid;place-items:center}
+.tg-field .snd{color:var(--accent)}
+.tg-field svg{width:20px;height:20px;display:block}
+.tg-numkey{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}
+.numk{background:#fff;border:1px solid var(--scr-line);border-radius:10px;padding:12px 0;font-size:17px;font-weight:600;font-family:var(--mono);color:var(--scr-txt)}
+.numk:hover{background:var(--scr-2)}
+.numk.act{background:var(--accent);color:#fff;border-color:var(--accent);font-size:12px;font-family:var(--sans)}
+
+/* ============ WEB APP ============ */
+.wa-header{flex:0 0 auto;display:flex;align-items:center;gap:10px;padding:9px 14px;background:var(--scr);border-bottom:1px solid var(--scr-line);min-height:46px}
+.wa-back{width:24px;height:24px;color:var(--accent);display:none;place-items:center}
+.wa-back.show{display:grid}
+.wa-back svg{width:19px;height:19px}
+.wa-h-t{font-weight:700;font-size:15px;color:var(--scr-txt)}
+.wa-h-x{margin-left:auto;color:var(--scr-muted-2);font-size:20px;width:26px;height:26px;display:grid;place-items:center;border-radius:50%;background:var(--scr-2)}
+.wa-body{flex:1 1 auto;min-height:0;overflow-y:auto;background:var(--scr-2)}
+.wa-screen{padding:16px 15px 26px}
+.wa-screen[hidden]{display:none!important}
+.wa-tabbar{flex:0 0 auto;display:grid;grid-template-columns:repeat(5,1fr);background:var(--scr);border-top:1px solid var(--scr-line);padding:6px 4px 8px}
+.tab{border:0;background:transparent;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--scr-muted-2);font-size:10px;font-weight:600;padding:4px 0}
+.tab svg{width:22px;height:22px}
+.tab.active{color:var(--accent)}
+.wa-tabbar[hidden]{display:none!important}
+
+/* web app pieces */
+.kv{border-radius:16px;overflow:hidden;position:relative;background:linear-gradient(135deg,#1d222b,#2b1a10 120%);color:#fff;padding:18px 16px 16px;box-shadow:var(--shadow-sm)}
+.kv::after{content:"";position:absolute;right:-30px;top:-30px;width:150px;height:150px;background:radial-gradient(circle,rgba(255,90,0,.55),transparent 70%)}
+.kv .kv-badge{font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;background:rgba(255,255,255,.16);padding:3px 9px;border-radius:999px;display:inline-block;position:relative;z-index:1}
+.kv .kv-t{font-size:20px;font-weight:800;margin:9px 0 3px;position:relative;z-index:1;line-height:1.15}
+.kv .kv-s{font-size:12.5px;opacity:.85;position:relative;z-index:1}
+.kv .kv-ph{position:absolute;right:12px;bottom:9px;font-size:9px;color:rgba(255,255,255,.5);z-index:1;letter-spacing:.3px}
+
+.balance{display:flex;align-items:center;gap:14px;background:var(--scr);border:1px solid var(--scr-line);border-radius:16px;padding:15px 16px;margin-top:12px}
+.balance .coin{width:46px;height:46px;border-radius:50%;background:linear-gradient(145deg,#ffcf33,#f7a500);display:grid;place-items:center;color:#8a5a00;font-weight:800;font-size:19px;box-shadow:0 3px 10px rgba(247,165,0,.4);flex:0 0 auto}
+.balance .bl{flex:1}
+.balance .bl .bl-n{font-size:26px;font-weight:800;color:var(--scr-txt);font-variant-numeric:tabular-nums;line-height:1}
+.balance .bl .bl-l{font-size:12px;color:var(--scr-muted);margin-top:2px}
+.balance .bl-go{color:var(--accent);font-size:12.5px;font-weight:700;display:flex;align-items:center;gap:3px}
+
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.tile{background:var(--scr);border:1px solid var(--scr-line);border-radius:14px;padding:13px 13px 14px;text-align:left;display:flex;flex-direction:column;gap:8px;transition:.12s}
+.tile:hover{border-color:#d3d7dd;transform:translateY(-1px);box-shadow:var(--shadow-sm)}
+.tile .t-ico{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-size:17px}
+.tile .t-t{font-size:13.5px;font-weight:700;color:var(--scr-txt)}
+.tile .t-s{font-size:11.5px;color:var(--scr-muted);line-height:1.3}
+.tile.wide{grid-column:1/-1;flex-direction:row;align-items:center}
+.tile.wide .t-ico{flex:0 0 auto}
+
+.sec-t{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--scr-muted);font-weight:700;margin:22px 2px 10px;display:flex;align-items:center;gap:8px}
+.sec-t:first-child{margin-top:2px}
+.sec-t .st-r{margin-left:auto;color:var(--accent);font-weight:700;text-transform:none;letter-spacing:0;font-size:12.5px}
+
+.card{background:var(--scr);border:1px solid var(--scr-line);border-radius:14px;padding:14px;color:var(--scr-txt)}
+.card+.card{margin-top:10px}
+.muted{color:var(--scr-muted)}
+.wa-lead{font-size:13.5px;color:var(--scr-txt);line-height:1.5}
+
+/* progress */
+.prog{height:10px;border-radius:999px;background:var(--scr-3);overflow:hidden;margin:10px 0 6px}
+.prog>i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),#ff9a52);border-radius:999px}
+
+/* list rows */
+.row{display:flex;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid var(--scr-line)}
+.row:last-child{border-bottom:0}
+.row .r-ico{width:38px;height:38px;border-radius:10px;background:var(--scr-2);display:grid;place-items:center;font-size:17px;flex:0 0 auto}
+.row .r-m{flex:1;min-width:0}
+.row .r-t{font-size:13.5px;font-weight:600;color:var(--scr-txt)}
+.row .r-s{font-size:11.5px;color:var(--scr-muted)}
+.row .r-r{text-align:right;flex:0 0 auto}
+.pts{font-family:var(--mono);font-weight:700;color:var(--accent);font-size:14px;white-space:nowrap}
+.pts.dim{color:var(--scr-muted-2)}
+
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px}
+.chip.ok{background:#e4f8ee;color:#149a5a}
+.chip.wait{background:#fff2dd;color:#b7791f}
+.chip.no{background:#fde9e7;color:#d63b31}
+.chip.gold{background:#fff6d6;color:#b58200}
+.chip.info{background:#e7f0ff;color:#2f6fe0}
+.chip.gray{background:var(--scr-3);color:var(--scr-muted)}
+
+/* schedule timeline */
+.tl{position:relative;padding-left:20px}
+.tl::before{content:"";position:absolute;left:5px;top:6px;bottom:6px;width:2px;background:var(--scr-line)}
+.tl-item{position:relative;padding:0 0 16px}
+.tl-item::before{content:"";position:absolute;left:-18px;top:5px;width:11px;height:11px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px var(--scr-2)}
+.tl-item.plenary::before{background:var(--gold)}
+.tl-time{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--scr-txt)}
+.tl-title{font-size:13.5px;font-weight:600;color:var(--scr-txt);margin-top:1px}
+.tl-desc{font-size:12px;color:var(--scr-muted);margin-top:2px}
+
+/* map */
+.map{position:relative;background:linear-gradient(135deg,#eef1f5,#e3e8ee);border:1px solid var(--scr-line);border-radius:16px;height:210px;overflow:hidden;margin-bottom:6px}
+.map .floor{position:absolute;font-size:10px;color:var(--scr-muted-2);font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.pin-pt{position:absolute;transform:translate(-50%,-100%);display:flex;flex-direction:column;align-items:center;gap:2px}
+.pin-pt .pin-d{width:26px;height:26px;border-radius:50% 50% 50% 2px;transform:rotate(45deg);display:grid;place-items:center;box-shadow:0 3px 8px rgba(0,0,0,.25);font-size:0}
+.pin-pt .pin-d i{transform:rotate(-45deg);font-size:12px;font-style:normal}
+.pin-pt .pin-l{font-size:9px;font-weight:700;background:#fff;padding:1px 5px;border-radius:6px;color:var(--scr-txt);white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.pin-d.done{background:var(--ok)}
+.pin-d.todo{background:var(--accent)}
+.pin-d.gold{background:var(--gold)}
+
+/* shop */
+.shop-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.merch{background:var(--scr);border:1px solid var(--scr-line);border-radius:14px;overflow:hidden;text-align:left;transition:.12s;position:relative}
+.merch:hover{transform:translateY(-2px);box-shadow:var(--shadow-sm);border-color:#d8dce2}
+.merch .m-img{height:96px;background:var(--scr-3);display:grid;place-items:center;font-size:36px;position:relative}
+.merch .m-b{padding:10px 11px 12px}
+.merch .m-t{font-size:13px;font-weight:700;color:var(--scr-txt)}
+.merch .m-row{display:flex;align-items:center;justify-content:space-between;margin-top:7px}
+.merch .m-price{font-family:var(--mono);font-weight:700;color:var(--accent);font-size:14px}
+.merch .m-stock{font-size:10.5px;color:var(--scr-muted)}
+.merch.off{opacity:.55;filter:saturate(.4)}
+.merch.off:hover{transform:none;box-shadow:none}
+.merch .m-cover{position:absolute;inset:0;background:rgba(255,255,255,.55);display:grid;place-items:center;z-index:2}
+.merch .m-cover span{background:#111;color:#fff;font-size:11px;font-weight:700;padding:5px 11px;border-radius:999px;transform:rotate(-6deg)}
+.merch .m-flag{position:absolute;top:8px;left:8px;z-index:1}
+
+/* big primary button (Telegram MainButton style) */
+.mainbtn{display:block;width:100%;border:0;background:var(--accent);color:#fff;font-weight:700;font-size:15px;padding:15px;border-radius:13px;box-shadow:0 6px 16px rgba(255,90,0,.32);transition:.12s;text-align:center}
+.mainbtn:hover{background:var(--accent-600)}
+.mainbtn:disabled{background:#c9ccd2;color:#fff;box-shadow:none;cursor:not-allowed}
+.mainbtn.sec{background:var(--scr);color:var(--accent);border:1.5px solid var(--accent);box-shadow:none}
+.mainbtn.sec:hover{background:var(--accent-tint)}
+.mainbtn.ghost{background:var(--scr);color:var(--scr-muted);border:1px solid var(--scr-line);box-shadow:none}
+.mainbtn.danger{background:var(--scr);color:var(--bad);border:1.5px solid #f3c3bf;box-shadow:none}
+
+/* form */
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12.5px;font-weight:600;color:var(--scr-txt);margin-bottom:6px}
+.field label .req{color:var(--accent)}
+.field label .opt{color:var(--scr-muted-2);font-weight:500}
+.inp{width:100%;border:1.5px solid var(--scr-line);border-radius:11px;padding:12px 13px;font-size:14px;font-family:inherit;background:var(--scr);color:var(--scr-txt);transition:.12s}
+.inp:focus{outline:0;border-color:var(--accent)}
+.inp.err{border-color:var(--bad);background:#fff7f6}
+.inp::placeholder{color:var(--scr-muted-2)}
+.err-msg{color:var(--bad);font-size:11.5px;margin-top:5px;display:none;align-items:center;gap:5px}
+.err-msg.show{display:flex}
+.consent{display:flex;gap:11px;align-items:flex-start;padding:12px;border:1px solid var(--scr-line);border-radius:12px;margin-bottom:9px;background:var(--scr);cursor:pointer}
+.consent input{margin-top:2px;width:19px;height:19px;accent-color:var(--accent);flex:0 0 auto}
+.consent .c-t{font-size:12px;color:var(--scr-txt);line-height:1.4}
+.consent .c-t a{color:var(--accent);text-decoration:underline}
+.consent .c-t .must{color:var(--accent);font-weight:700}
+
+/* notice banners inside screens */
+.note{display:flex;gap:10px;padding:12px 13px;border-radius:12px;font-size:12.5px;line-height:1.4;align-items:flex-start;margin-bottom:12px}
+.note .n-i{flex:0 0 auto;font-size:15px;line-height:1.2}
+.note.blk{background:#fff3ec;border:1px solid #ffd6bd;color:#9a4a12}
+.note.info{background:#eef4ff;border:1px solid #cfe0ff;color:#2c5bb0}
+.note.ok{background:#e9f9f0;border:1px solid #c2ebd3;color:#177f4c}
+.note.warn{background:#fff7e6;border:1px solid #ffe3a8;color:#8a6410}
+
+/* soon screen */
+.soon{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px 26px;gap:6px}
+.soon .s-emo{font-size:52px}
+.soon h2{font-size:22px;font-weight:800;color:var(--scr-txt);margin:8px 0 0}
+.soon p{color:var(--scr-muted);font-size:13.5px;max-width:260px}
+.soon .s-count{display:flex;gap:8px;margin-top:14px}
+.soon .s-count div{background:var(--scr);border:1px solid var(--scr-line);border-radius:12px;padding:9px 12px;min-width:52px}
+.soon .s-count b{display:block;font-size:22px;font-weight:800;color:var(--accent);font-family:var(--mono)}
+.soon .s-count span{font-size:10px;color:var(--scr-muted);text-transform:uppercase;letter-spacing:.4px}
+
+/* QR */
+.qr-card{background:var(--scr);border:1px solid var(--scr-line);border-radius:18px;padding:20px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px}
+.qr-svg{width:172px;height:172px;background:#fff;border-radius:12px;padding:8px;box-shadow:inset 0 0 0 1px var(--scr-line)}
+.id-big{font-family:var(--mono);font-weight:700;font-size:30px;letter-spacing:6px;color:var(--scr-txt)}
+.id-lbl{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--scr-muted);font-weight:700}
+
+/* generic small button row */
+.btn-row{display:flex;gap:9px;margin-top:14px}
+.btn-row>*{flex:1}
+
+/* ============ DEV NOTES RAIL ============ */
+.note-block{margin-bottom:16px}
+.nb-title{font-size:14px;font-weight:800;color:var(--txt);display:flex;align-items:center;gap:9px;margin-bottom:4px}
+.nb-title .nb-ico{width:26px;height:26px;border-radius:7px;background:var(--accent-weak);color:var(--accent);display:grid;place-items:center;font-size:13px;flex:0 0 auto}
+.nb-purpose{font-size:12.5px;color:var(--muted);line-height:1.5;margin-bottom:12px}
+.nb-h{font-size:10.5px;text-transform:uppercase;letter-spacing:.6px;font-weight:700;color:var(--muted-2);margin:14px 0 7px;display:flex;align-items:center;gap:7px}
+.nb-h::before{content:"";width:13px;height:2px;background:var(--accent);border-radius:2px}
+.nb-logic{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:7px}
+.nb-logic li{font-size:12.5px;color:var(--txt);line-height:1.45;padding-left:16px;position:relative}
+.nb-logic li::before{content:"›";position:absolute;left:2px;top:-1px;color:var(--accent);font-weight:800}
+.nb-logic li b{color:#fff;font-weight:700}
+.nb-logic li code,.nb-purpose code{font-family:var(--mono);font-size:11.5px;background:var(--panel-3);padding:1px 5px;border-radius:5px;color:#ffcba3}
+.nb-states{display:flex;flex-direction:column;gap:6px}
+.nb-state{display:flex;gap:9px;align-items:flex-start;font-size:12px;background:var(--panel-2);border:1px solid var(--line);border-radius:9px;padding:8px 10px}
+.nb-state .ns-k{font-weight:700;color:#fff;flex:0 0 auto}
+.nb-state .ns-d{color:var(--muted)}
+.nb-state .ns-dot{width:8px;height:8px;border-radius:50%;margin-top:4px;flex:0 0 auto}
+.nb-open{background:#2a2113;border:1px solid #4a3a1a;border-radius:9px;padding:9px 11px;font-size:12px;color:#f3cd8a;line-height:1.45;display:flex;gap:8px}
+.nb-open .o-i{flex:0 0 auto}
+.nb-empty{color:var(--muted-2);font-size:13px;text-align:center;padding:40px 20px}
+
+/* ============ INTRO OVERLAY ============ */
+.overlay{position:fixed;inset:0;background:rgba(8,10,14,.72);backdrop-filter:blur(4px);z-index:100;display:flex;align-items:center;justify-content:center;padding:24px}
+.overlay[hidden]{display:none!important}
+.intro{background:var(--panel);border:1px solid var(--line);border-radius:20px;max-width:540px;width:100%;padding:28px 28px 24px;box-shadow:var(--shadow);max-height:90vh;overflow:auto}
+.intro .i-logo{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.intro h1{font-size:21px;font-weight:800;margin:0}
+.intro .i-sub{color:var(--muted);font-size:12.5px}
+.intro p{color:var(--muted);font-size:13.5px;line-height:1.55}
+.intro .i-list{display:flex;flex-direction:column;gap:11px;margin:18px 0}
+.i-row{display:flex;gap:12px;align-items:flex-start}
+.i-row .i-n{width:26px;height:26px;border-radius:8px;background:var(--accent-weak);color:var(--accent);display:grid;place-items:center;font-weight:800;font-size:13px;flex:0 0 auto}
+.i-row .i-d{font-size:13px;color:var(--txt);line-height:1.45}
+.i-row .i-d b{color:#fff}
+.intro .i-meta{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 18px}
+.i-tag{font-size:11px;font-weight:600;color:var(--muted);background:var(--panel-2);border:1px solid var(--line);padding:5px 10px;border-radius:999px}
+.i-tag b{color:var(--accent)}
+
+/* ============ RESPONSIVE ============ */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:35;display:none}
+.rail-close{display:none;margin-left:auto;background:var(--panel-2);border:1px solid var(--line);color:var(--muted);width:28px;height:28px;border-radius:8px;font-size:15px}
+@media (max-width:1180px){
+  .rail.notes{position:fixed;right:0;top:0;bottom:0;z-index:36;box-shadow:var(--shadow);transform:translateX(100%);transition:transform .2s}
+  .app[data-notes] .rail.notes{transform:none}
+  .app[data-notes] .scrim{display:block}
+  .rail.notes .rail-close{display:grid}
+}
+@media (max-width:900px){
+  .surfaces{margin:0}
+  .brand .b-t,.brand .b-s{display:none}
+  .rail.nav{position:fixed;left:0;top:0;bottom:0;z-index:36;box-shadow:var(--shadow);transform:translateX(-100%);transition:transform .2s;flex-basis:280px}
+  .app[data-nav] .rail.nav{transform:none}
+  .app[data-nav] .scrim{display:block}
+  .rail.nav .rail-close{display:grid}
+  .stage{padding:14px}
+  .btn-nav-toggle{display:flex!important}
+}
+@media (min-width:901px){.btn-nav-toggle{display:none!important}}
+@media (max-width:560px){
+  .topbar{flex-wrap:wrap;gap:8px;padding:8px 10px}
+  .phone{border-radius:34px;height:760px}
+  .surf-btn{padding:7px 9px;font-size:12px}
+  .surf-btn .st-full{display:none}
+  .top-actions .tbtn .tb-txt{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+
+<div class="app" id="app">
+
+  <!-- ===== TOP BAR ===== -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">П</div>
+      <div>
+        <div class="b-t">ПСБ · Финунивер</div>
+        <div class="b-s">Bot + Web App · прототип</div>
+      </div>
+    </div>
+
+    <nav class="surfaces" id="surfaces">
+      <button class="surf-btn active" data-surface="botuser"><span class="dot"></span><span class="st-full">Бот · участник</span><span class="st-min" hidden>Бот</span></button>
+      <button class="surf-btn" data-surface="botmgr"><span class="dot"></span>Бот · менеджер</button>
+      <button class="surf-btn" data-surface="webapp"><span class="dot"></span>Web App</button>
+    </nav>
+
+    <div class="top-actions">
+      <button class="tbtn btn-nav-toggle" id="navToggle" title="Экраны" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <button class="tbtn" id="resetBtn" title="Сбросить прогресс">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+        <span class="tb-txt">Сбросить</span>
+      </button>
+      <button class="tbtn on" id="notesToggle" title="Заметки для разработки">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v13H8l-4 4z"/><path d="M8 9h8M8 13h5"/></svg>
+        <span class="tb-txt">Dev-заметки</span>
+      </button>
+      <button class="tbtn" id="helpBtn" title="Как пользоваться">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.8.4-1 .9-1 1.7"/><path d="M12 17h.01"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="work">
+    <div class="scrim" id="scrim"></div>
+
+    <!-- ===== LEFT NAV ===== -->
+    <aside class="rail nav" id="navRail">
+      <div class="rail-head">
+        <div class="rh-t">Экраны и состояния</div>
+        <div class="rh-s" id="navSub">Бот участника</div>
+        <button class="rail-close" data-close="nav">✕</button>
+      </div>
+      <div class="rail-body" id="navBody"></div>
+    </aside>
+
+    <!-- ===== STAGE / PHONE ===== -->
+    <main class="stage">
+      <div class="stage-hint" id="stageHint">Кликай кнопки внутри экрана — переходы живые</div>
+      <div class="phone">
+        <div class="notch"></div>
+        <div class="screen-wrap">
+          <div class="statusbar">
+            <span id="clock">10:24</span>
+            <span class="sb-r">
+              <svg viewBox="0 0 18 12"><rect x="0" y="7" width="3" height="5" rx="1" fill="currentColor"/><rect x="4.5" y="4.5" width="3" height="7.5" rx="1" fill="currentColor"/><rect x="9" y="2" width="3" height="10" rx="1" fill="currentColor"/><rect x="13.5" y="0" width="3" height="12" rx="1" fill="currentColor" opacity=".35"/></svg>
+              <svg viewBox="0 0 18 12"><path d="M9 2.5C6 2.5 3.6 3.7 2 5.4l1.4 1.4C4.9 5.3 6.8 4.5 9 4.5s4.1.8 5.6 2.3L16 5.4C14.4 3.7 12 2.5 9 2.5z" fill="currentColor"/><path d="M9 6.5c-1.5 0-2.8.6-3.8 1.6L9 11.7l3.8-3.6C11.8 7.1 10.5 6.5 9 6.5z" fill="currentColor"/></svg>
+              <svg viewBox="0 0 26 12"><rect x="0.5" y="0.5" width="21" height="11" rx="3" fill="none" stroke="currentColor"/><rect x="22.5" y="4" width="2" height="4" rx="1" fill="currentColor"/><rect x="2" y="2" width="16" height="8" rx="1.5" fill="currentColor"/></svg>
+            </span>
+          </div>
+
+          <!-- SURFACE: BOT USER -->
+          <div class="surface-root" id="s-botuser">
+            <div class="tg-header">
+              <span class="tg-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></span>
+              <div class="tg-ava">П</div>
+              <div>
+                <div class="tg-h-t">ПСБ · Финунивер</div>
+                <div class="tg-h-s muted">бот · онлайн</div>
+              </div>
+              <div class="tg-h-r">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+              </div>
+            </div>
+            <div class="tg-chat" id="chatUser"></div>
+            <div class="tg-input" id="inputUser"></div>
+          </div>
+
+          <!-- SURFACE: BOT MANAGER -->
+          <div class="surface-root" id="s-botmgr" hidden>
+            <div class="tg-header">
+              <span class="tg-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></span>
+              <div class="tg-ava" style="background:linear-gradient(145deg,#3a4150,#586277)">М</div>
+              <div>
+                <div class="tg-h-t">ПСБ · Финунивер</div>
+                <div class="tg-h-s muted">режим менеджера</div>
+              </div>
+              <div class="tg-h-r">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+              </div>
+            </div>
+            <div class="tg-chat" id="chatMgr"></div>
+            <div class="tg-input" id="inputMgr"></div>
+          </div>
+
+          <!-- SURFACE: WEB APP -->
+          <div class="surface-root" id="s-webapp" hidden>
+            <div class="wa-header">
+              <span class="wa-back" id="waBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></span>
+              <span class="wa-h-t" id="waTitle">ПСБ · Финунивер</span>
+              <span class="wa-h-x">✕</span>
+            </div>
+            <div class="wa-body" id="waBody">
+              <!-- screens injected/authored below -->
+            </div>
+            <nav class="wa-tabbar" id="waTabbar"></nav>
+          </div>
+
+        </div>
+      </div>
+    </main>
+
+    <!-- ===== RIGHT NOTES ===== -->
+    <aside class="rail notes" id="notesRail">
+      <div class="rail-head">
+        <div class="rh-t" style="display:flex;align-items:center;gap:8px">Заметки для разработки
+          <button class="rail-close" data-close="notes" style="margin-left:auto">✕</button>
+        </div>
+        <div class="rh-s">Логика, состояния и данные текущего экрана — для Эдика</div>
+      </div>
+      <div class="rail-body" id="notesBody"></div>
+    </aside>
+  </div>
+</div>
+
+<!-- ===== INTRO OVERLAY ===== -->
+<div class="overlay" id="overlay">
+  <div class="intro">
+    <div class="i-logo">
+      <div class="logo" style="width:42px;height:42px;font-size:18px">П</div>
+      <div>
+        <h1>Кликабельный прототип</h1>
+        <div class="i-sub">ПСБ × Финуниверситет · Telegram-бот и Web App · 6 октября</div>
+      </div>
+    </div>
+    <p>Это интерактивная спека для разработки. Три поверхности переключаются вверху, кнопки внутри телефона живые, а справа — заметки по логике каждого экрана.</p>
+    <div class="i-list">
+      <div class="i-row"><div class="i-n">1</div><div class="i-d"><b>Поверхности</b> вверху: бот участника, бот менеджера, Web App участника.</div></div>
+      <div class="i-row"><div class="i-n">2</div><div class="i-d"><b>Слева</b> — все экраны и состояния поверхности. Кликом можно прыгнуть в любое, включая «краевые» (не найден, мест нет, недостаточно баллов).</div></div>
+      <div class="i-row"><div class="i-n">3</div><div class="i-d"><b>Справа</b> — <b>Dev-заметки</b>: назначение, правила, состояния и подсказки по данным. Строго по ТЗ; открытые вопросы помечены жёлтым.</div></div>
+    </div>
+    <div class="i-meta">
+      <span class="i-tag">Роли: <b>участник · менеджер · тестер · админ</b></span>
+      <span class="i-tag">~<b>1500</b> студентов</span>
+      <span class="i-tag">Валюта: <b>баллы</b></span>
+      <span class="i-tag">КВ — <b>плейсхолдер ПСБ</b></span>
+    </div>
+    <button class="mainbtn" id="introStart">Открыть прототип →</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* =========================================================================
+   ПСБ · Финунивер — кликабельный прототип (спека для разработки)
+   Данные экономики строго из ТЗ. Открытые вопросы помечены в заметках.
+   ========================================================================= */
+
+/* ---------- Справочные данные из ТЗ ---------- */
+var PARTICIPANT = { id:"482913", fio:"Иван Соколов", short:"Иван С." };
+
+var ACTS = [
+  { id:"plenary", t:"Пленарная сессия", ico:"🏛", pts:25 },
+  { id:"mk",      t:"Мастер-класс от эксперта", ico:"🎓", pts:15 },
+  { id:"hr",      t:"HR-консультация", ico:"💼", pts:10 },
+  { id:"reg",     t:"Заполнение анкеты / регистрация", ico:"📝", pts:1 },
+  { id:"fast",    t:"Быстрые активности на фестивале", ico:"⚡", pts:1 },
+  { id:"enter",   t:"Вход на мероприятие", ico:"🚪", pts:null } // баллы финализируются с ПСБ
+];
+function actById(id){ return ACTS.find(function(a){return a.id===id;}); }
+
+var MERCH = [
+  { id:"hoodie", t:"Толстовка",         emo:"🧥", price:50, qty:50  },
+  { id:"power",  t:"Пауэрбанк",         emo:"🔋", price:45, qty:50  },
+  { id:"bottle", t:"Бутылка",           emo:"🍶", price:35, qty:50  },
+  { id:"card",   t:"Картхолдер",        emo:"💳", price:30, qty:50  },
+  { id:"shop",   t:"Шоппер",            emo:"👜", price:25, qty:100 },
+  { id:"note",   t:"Блокнот",           emo:"📓", price:20, qty:100 },
+  { id:"cord",   t:"Шнур для телефона", emo:"🔌", price:15, qty:100 },
+  { id:"coffee", t:"Кофе",              emo:"☕", price:5,  qty:Infinity, spot:true },
+  { id:"photo",  t:"Фотобудка",         emo:"📸", price:2,  qty:Infinity, spot:true },
+  { id:"karaoke",t:"Караоке-будка",     emo:"🎤", price:2,  qty:Infinity, spot:true }
+];
+function merchById(id){ return MERCH.find(function(m){return m.id===id;}); }
+
+var WORKSHOPS = [
+  { id:"w1", n:"Мастер-класс № 1", topic:"тема — от клиента", sessions:[
+      {id:"w1s1", time:"14:15", limit:30, free:12},
+      {id:"w1s2", time:"15:30", limit:30, free:3} ] },
+  { id:"w2", n:"Мастер-класс № 2", topic:"тема — от клиента", sessions:[
+      {id:"w2s1", time:"14:15", limit:25, free:0},
+      {id:"w2s2", time:"16:00", limit:25, free:18} ] },
+  { id:"w3", n:"Мастер-класс № 3", topic:"тема — от клиента", sessions:[
+      {id:"w3s1", time:"15:00", limit:40, free:22} ] },
+  { id:"w4", n:"Мастер-класс № 4", topic:"тема — от клиента", sessions:[
+      {id:"w4s1", time:"16:00", limit:20, free:7} ] }
+];
+function sessionById(sid){
+  for(var i=0;i<WORKSHOPS.length;i++){ var s=WORKSHOPS[i].sessions.find(function(x){return x.id===sid;}); if(s) return {ws:WORKSHOPS[i], s:s}; }
+  return null;
+}
+
+var PUSHES = [
+  { tag:"За ~2 недели · прогрев", txt:"Привет! 6 октября в Финуниверситете — карьерный день ПСБ: топ-спикеры, мастер-классы и мерч за баллы. Жми «Открыть приложение» и посмотри, что тебя ждёт 👇", wa:true },
+  { tag:"Спикеры", txt:"Программа пленарки собрана: председатель банка и топ-менеджеры ПСБ уже в расписании. Заполни анкету в приложении — начислим стартовые баллы 🎯" },
+  { tag:"Напоминание · не заполнил данные", txt:"Ты ещё не заполнил анкету 👀 Это пара минут — и стартовые баллы твои. Без анкеты нельзя тратить баллы в магазине мерча.", filter:true },
+  { tag:"За день", txt:"Завтра! Сбор с 11:00, пленарка 11:00–14:00, дальше активности и мастер-классы до 17:00. Не забудь свой QR — по нему начисляют баллы." },
+  { tag:"В день · старт активностей", txt:"Активности открыты! Проходи точки, копи баллы и меняй их на мерч на стойке (1 этаж). Толстовка уже ждёт 😉" }
+];
+
+/* ---------- Состояние сессии прототипа ---------- */
+var state;
+function freshState(){
+  return {
+    launchOpen:true,        // ролевой гейт web app: true = «открыто всем»
+    registered:true,        // данные анкеты заполнены
+    emailVerified:false,    // e-mail подтверждён (верификация — открытый вопрос)
+    email:"i.sokolov@edu.fa.ru",
+    fio:PARTICIPANT.fio, phone:"+7 (912) 345-67-89",
+    earned:[
+      {act:"reg",     pts:1,  t:"11:02"},
+      {act:"plenary", pts:25, t:"12:40"},
+      {act:"mk",      pts:15, t:"14:30"}
+    ],
+    reservations:[],        // {itemId, status:'reserved'|'issued', t}
+    bookings:{ w1s1:true }, // sessionId -> true
+    stock:(function(){ var o={}; MERCH.forEach(function(m){o[m.id]=m.qty;}); o.shop=0; return o; })(), // Шоппер = закончился (демо)
+    marked:{},              // manager: `${actId}` -> {t} для участника 482913
+    issued:{}               // manager: reservationKey -> true
+  };
+}
+function balance(){
+  var e=0; state.earned.forEach(function(x){e+=x.pts;});
+  var s=0; state.reservations.forEach(function(r){ var m=merchById(r.itemId); if(m) s+=m.price; });
+  return e - s;
+}
+
+/* ---------- Утилиты ---------- */
+function $(s,r){ return (r||document).querySelector(s); }
+function $all(s,r){ return Array.prototype.slice.call((r||document).querySelectorAll(s)); }
+function esc(t){ return String(t).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
+function stockLabel(m){ return m.qty===Infinity ? "∞" : (state.stock[m.id]+" шт"); }
+
+/* Псевдо-QR (декоративный, детерминированный от seed) */
+function qrSVG(seed, px){
+  px = px||172; var N=25, cell=px/N;
+  var h=2166136261; for(var i=0;i<seed.length;i++){ h^=seed.charCodeAt(i); h=Math.imul(h,16777619); }
+  function rnd(){ h^=h<<13; h^=h>>>17; h^=h<<5; return ((h>>>0)%1000)/1000; }
+  var r='<svg class="qr-svg" viewBox="0 0 '+px+' '+px+'" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="QR-код участника">';
+  r+='<rect width="'+px+'" height="'+px+'" fill="#fff"/>';
+  function finder(cx,cy){
+    r+='<rect x="'+(cx*cell)+'" y="'+(cy*cell)+'" width="'+(7*cell)+'" height="'+(7*cell)+'" fill="#111"/>';
+    r+='<rect x="'+((cx+1)*cell)+'" y="'+((cy+1)*cell)+'" width="'+(5*cell)+'" height="'+(5*cell)+'" fill="#fff"/>';
+    r+='<rect x="'+((cx+2)*cell)+'" y="'+((cy+2)*cell)+'" width="'+(3*cell)+'" height="'+(3*cell)+'" fill="#111"/>';
+  }
+  function inFinder(x,y){ return (x<8&&y<8)||(x>N-9&&y<8)||(x<8&&y>N-9); }
+  for(var y=0;y<N;y++) for(var x=0;x<N;x++){ if(inFinder(x,y))continue; if(rnd()>0.56) r+='<rect x="'+(x*cell)+'" y="'+(y*cell)+'" width="'+cell+'" height="'+cell+'" fill="#111"/>'; }
+  finder(0,0); finder(N-7,0); finder(0,N-7);
+  r+='</svg>'; return r;
+}
+
+/* =========================================================================
+   DEV-ЗАМЕТКИ (правый рельс). Ключ = экран/состояние.
+   ========================================================================= */
+function S(k,d,c){ return {k:k,d:d,c:c||"var(--muted-2)"}; }
+var NOTES = {
+
+/* ----- Бот участника ----- */
+"bu-start":{ ico:"🚀", title:"/start · точка входа",
+  purpose:"Единственный вход в систему. QR со стикеров по вузу и пост в паблике ВК ведут на deeplink <code>t.me/bot?start=src</code>. Факт входа = регистрация пользователя в системе.",
+  logic:["Параметр deeplink (<code>start=stolovaya</code>, <code>vk</code>, <code>lift</code>…) сохраняем как <b>источник</b> — пригодится в аналитике охвата.","Определяем <b>роль</b> по Telegram ID: участник / менеджер / тестер / админ. Незнакомый ID = участник.","Первое сообщение: короткий рассказ о боте + кнопка перехода к согласию. Ничего лишнего — цель довести до Web App."],
+  states:[S("Новый","первый /start → рассказ + запрос согласия","var(--info)"),S("Повторный","/start после согласия → сразу меню с кнопкой Web App","var(--ok)")],
+  open:[] },
+
+"bu-consent":{ ico:"🔒", title:"Первичное согласие",
+  purpose:"В боте берём только первичное согласие на обработку ПД и принятие правил — этого достаточно, чтобы открыть Web App. Детальные галочки (реклама/рекрутинг) — уже в форме Web App.",
+  logic:["Кнопки: <b>Соглашаюсь</b> · <b>Политика ПД</b> · <b>Правила</b>. До согласия Web App не открываем.","Тексты согласий и правил даёт ПСБ — подставляем ссылки/файлы, не сочиняем.","Фиксируем факт согласия: <code>user_id</code>, версия текста, дата/время (юридический след)."],
+  states:[S("Ожидание","кнопки активны, Web App скрыт","var(--warn)"),S("Дано","записали согласие → открываем меню","var(--ok)")],
+  open:["Итоговый состав согласий: 2 или 3 (ПД / рекламная рассылка / отдельное на рекрутинг, если ПСБ не считает его рекламой) — ждём тексты от ПСБ."] },
+
+"bu-open":{ ico:"✅", title:"Меню · открыт Web App",
+  purpose:"После согласия — постоянное reply-меню и большая кнопка запуска Web App (тип web_app). Одна авторизация: в Web App пользователь приходит уже опознанным через initData бота.",
+  logic:["Reply-клавиатура закреплена: <b>Открыть приложение</b> · <b>Мой QR/ID</b> · <b>Помощь</b>.","Кнопка Web App — <code>web_app</code> с URL апки; прогресс и данные сохраняются между заходами.","Ролевой гейт: обычному участнику до запуска Web App показывает экран «скоро»; тестерам/менеджерам/админам — рабочую версию."],
+  states:[S("Гейт закрыт","участник видит «скоро» внутри апки","var(--warn)"),S("Гейт открыт","апка доступна всем","var(--ok)")],
+  open:[] },
+
+"bu-id":{ ico:"🆔", title:"Персональный ID / QR",
+  purpose:"У каждого участника уникальный 5–7-значный ID и персональный QR. По ним менеджер начисляет баллы и выдаёт мерч. Сам себя участник не отмечает — защита от пересыла.",
+  logic:["ID и QR всегда под рукой: закреплённое сообщение + пункт reply-меню «Мой QR/ID».","QR кодирует тот же ID (или подписанный токен). Основной способ на точке — <b>ввод цифрового ID</b> (быстрее скана), QR — запасной.","QR/ID одинаковые в боте и в Web App — это один и тот же участник."],
+  states:[S("Показ","ID + QR + подпись «покажи менеджеру»","var(--ok)")],
+  open:[] },
+
+"bu-push":{ ico:"🔔", title:"Пуш-воронка (примеры)",
+  purpose:"Бот отвечает за уведомления. Копирайт пушей — в скоупе Deep. Старт как можно раньше (в идеале прогрев за 2 недели), частота ~через день. Тексты ниже — черновики Deep.",
+  logic:["Сегменты: <b>всем</b> и <b>по фильтрам</b> (напр. «не заполнил данные» → до-пушить несколько раз).","Контент-план: прогрев → спикеры/ведущий/пленарка → активности → мерч + напоминания.","Отправка управляется из админки (разовая, по фильтру, запланированная по дате). Форматирование: <b>жирный</b>, <i>курсив</i>."],
+  states:[S("Черновик","копится контент-план","var(--info)"),S("Отправлено","лог доставок в аналитике","var(--ok)")],
+  open:[] },
+
+"bu-help":{ ico:"ℹ️", title:"Помощь / FAQ",
+  purpose:"Короткий FAQ и повтор ключевых кнопок, если пользователь потерялся.",
+  logic:["Ответы на частое: как копить баллы, где взять QR, как записаться на мастер-класс, где выдают мерч.","Дублирует кнопки: Открыть приложение · Мой QR/ID."],
+  states:[S("Статично","текст + кнопки","var(--muted-2)")], open:[] },
+
+/* ----- Бот менеджера ----- */
+"bm-menu":{ ico:"🧭", title:"Меню менеджера",
+  purpose:"Менеджер (промо-персонал) — отдельная роль в том же боте. После /start видит рабочее меню вместо участнического. Две задачи: отметка на точках и выдача мерча.",
+  logic:["Роль определяется по Telegram ID (заводится в админке заранее).","Меню: <b>Отметить участника</b> · <b>Выдать мерч</b> (+ опц. «Моя статистика»).","Весь ввод — по ID/QR участника; менеджер не может начислить сам себе."],
+  states:[S("Менеджер","рабочее меню","var(--ok)"),S("Не менеджер","обычное участническое меню","var(--muted-2)")],
+  open:[] },
+
+"bm-act":{ ico:"📍", title:"Выбор активности / точки",
+  purpose:"Перед отметкой менеджер выбирает, что именно засчитывает — от этого зависит число баллов.",
+  logic:["Список типов точек с баллами из ТЗ: пленарка 25, мастер-класс 15, HR 10, быстрые 1, вход (баллы уточняются).","Активности и их стоимость настраиваются в админке; бот подтягивает актуальный список.","Опц. «золотой час»: у точки может быть временное окно с множителем (x2) — под вопросом, скорее не в v1."],
+  states:[S("Выбор","инлайн-список точек","var(--info)")],
+  open:["Баллы за «Вход на мероприятие» — финализируются с ПСБ.","«Золотой час» (множитель) — под вопросом на v1."] },
+
+"bm-id":{ ico:"🔢", title:"Ввод ID / скан QR",
+  purpose:"Менеджер вводит 5–7-значный ID участника (основной способ — ради скорости) или сканирует его персональный QR.",
+  logic:["Ввод числом с клавиатуры или <b>Сканировать QR</b> (камера Telegram).","По ID/QR находим участника и показываем карточку перед начислением.","Валидация: несуществующий ID → ошибка; уже отмечен на этой точке → блок повторного начисления."],
+  states:[S("Ввод","поле + клавиатура + скан","var(--info)")],
+  open:[] },
+
+"bm-ok":{ ico:"✅", title:"Начисление · успех",
+  purpose:"Подтверждение и запись транзакции начисления баллов участнику.",
+  logic:["Показываем карточку: ФИО, текущий баланс, выбранная точка, «Начислить +N?».","После подтверждения: пишем транзакцию (<code>user_id</code>, точка, баллы, менеджер, время), обновляем баланс.","Ответ менеджеру: «Начислено +N, Имя, баланс: X»."],
+  states:[S("Успех","баланс обновлён, транзакция записана","var(--ok)")],
+  open:[] },
+
+"bm-notfound":{ ico:"⚠️", title:"Краевое · участник не найден",
+  purpose:"Введён ID, которого нет в системе (опечатка или человек не входил в бота).",
+  logic:["Не начисляем. Явная подсказка: проверить ID или попросить участника открыть бота (без бота = нет регистрации).","Кнопка «Ввести заново»."],
+  states:[S("Ошибка","ID не найден","var(--bad)")],
+  open:[] },
+
+"bm-dup":{ ico:"⛔", title:"Краевое · уже отмечен",
+  purpose:"Повторная отметка того же участника на той же точке — защита от накрутки.",
+  logic:["Показываем время предыдущей отметки, повторное начисление невозможно.","Правило антифрода настраивается: разовые точки (пленарка, вход) — строго 1 раз; «быстрые активности» — политику повторов уточнить."],
+  states:[S("Блок","дубль отклонён","var(--bad)")],
+  open:["Можно ли одну «быструю активность» засчитывать несколько раз — уточнить у клиента."] },
+
+"bm-merch":{ ico:"🎁", title:"Выдача мерча",
+  purpose:"Стойка на 1 этаже. Менеджер по ID/QR видит право участника (оформленный заказ) или оформляет оплату баллами на месте, затем отмечает «выдано».",
+  logic:["Карточка участника: баланс + список <b>прав на выдачу</b> (оформлено в Web App).","Два пути: <b>Выдать</b> по праву, либо <b>Оплата баллами на месте</b> (списываем цену → выдаём).","После выдачи — статус «выдано» (антифрод: повторно ту же позицию не выдать)."],
+  states:[S("Право","есть оформленный заказ → Выдать","var(--ok)"),S("На месте","оплата баллами прямо на стойке","var(--info)")],
+  open:[] },
+
+"bm-merch-ok":{ ico:"✅", title:"Мерч · выдано",
+  purpose:"Позиция помечена выданной, фиксируется факт для антифрода.",
+  logic:["Пишем: что, кому, менеджер, время. Повторная выдача этой же позиции блокируется.","Если оплата баллами на месте — сначала списываем баланс, потом «выдано»."],
+  states:[S("Выдано","готово","var(--ok)")],
+  open:[] },
+
+"bm-merch-none":{ ico:"⛔", title:"Мерч · уже выдано",
+  purpose:"Попытка выдать позицию, которая уже отмечена выданной.",
+  logic:["Показываем время прошлой выдачи. Блокируем дубль."],
+  states:[S("Блок","повтор отклонён","var(--bad)")], open:[] },
+
+"bm-merch-low":{ ico:"⛔", title:"Мерч · недостаточно баллов",
+  purpose:"Оплата баллами на месте, но у участника не хватает баланса на выбранную позицию.",
+  logic:["Не списываем и не выдаём. Показываем: нужно N, есть X.","Предлагаем позицию подешевле или добрать баллы на активностях."],
+  states:[S("Отказ","баланса не хватает","var(--bad)")], open:[] },
+
+/* ----- Web App участника ----- */
+"wa-soon":{ ico:"⏳", title:"Экран «Скоро» (ролевой гейт)",
+  purpose:"Web App публикуем на проде заранее, но обычным участникам до запуска показываем «скоро». Тестеры/менеджеры/админы уже видят рабочую версию — так экономим на отдельной тестовой среде.",
+  logic:["Гейт — по роли + флагу запуска. Переключается из админки без передеплоя.","Пока закрыто: превью даты/программы, кнопка уведомить (по желанию).","Открыли флаг → всем сразу доступна рабочая апка."],
+  states:[S("Закрыто","участник видит «скоро»","var(--warn)"),S("Открыто","апка доступна","var(--ok)")],
+  open:[] },
+
+"wa-register":{ ico:"📝", title:"Регистрация · единая форма",
+  purpose:"Сбор ПД и согласий — на одном экране (не пошагово, как в боте). Пока данные не заполнены — форма показывается сразу и блокирует остальные разделы.",
+  logic:["Поля: <b>ФИО, e-mail, телефон</b> + галочки согласий. Всё на одном экране.","За заполнение — <b>стартовые баллы</b> (+1 по ТЗ). Это мотивация: данные необязательны для входа, но нужны для трат в магазине.","E-mail: свой SMTP. Хранить с флагом «подтверждён»; предусмотреть смену e-mail при ошибке ввода.","Данные приходят предзаполненными из Telegram, где можно (имя)."],
+  states:[S("Пусто","форма ждёт ввода, разделы заблокированы","var(--warn)"),S("Ошибки","подсветка невалидных полей","var(--bad)"),S("Сохранено","+стартовые баллы, разделы открыты","var(--ok)")],
+  open:["Обязательны ли данные для участия — на согласовании с ПСБ (клиент переживает за явку).","Состав согласий 2/3 — по текстам ПСБ."] },
+
+"wa-email":{ ico:"✉️", title:"Подтверждение / смена e-mail",
+  purpose:"E-mail — ключевой контакт под рекрутинговую рассылку ПСБ. Нужна возможность подтвердить и исправить.",
+  logic:["Верификация кодом или ссылкой; храним флаг «подтверждён».","Смена e-mail при опечатке → повторная отправка кода.","Свой SMTP или платный сервис рассылок."],
+  states:[S("Не подтверждён","чип «не подтверждён» + кнопка","var(--warn)"),S("Код отправлен","ввод кода","var(--info)"),S("Подтверждён","зелёный чип","var(--ok)")],
+  open:["Нужна ли верификация вообще — на усмотрение ПСБ (влияет на UI и SMTP)."] },
+
+"wa-home":{ ico:"🏠", title:"Главная",
+  purpose:"Хаб апки: КВ бренда, баланс, быстрый доступ ко всем разделам, «что сейчас».",
+  logic:["Сверху — КВ (ключевой визуал) от ПСБ; сейчас плейсхолдер.","Баланс баллов + переход в историю.","Плитки: расписание, карта активностей, магазин, мастер-классы, о мероприятии, мой QR."],
+  states:[S("Рабочая","данные заполнены, всё открыто","var(--ok)")],
+  open:["Дизайн-код (цвета, лого, КВ) — ждём от клиента; сейчас плейсхолдер в цветах ПСБ."] },
+
+"wa-about":{ ico:"📄", title:"О мероприятии",
+  purpose:"Справка о дне: цель, место, тайминг, спикеры пленарки.",
+  logic:["Контент статичный, редактируется в админке/коде.","6 октября, Финуниверситет. 11:00–14:00 пленарка (председатель + топы ПСБ), 14:00–17:00 активности."],
+  states:[S("Статично","инфо-блок","var(--muted-2)")], open:[] },
+
+"wa-schedule":{ ico:"🗓", title:"Расписание",
+  purpose:"Тайминг дня. Помогает удержать людей до конца (одна из главных целей).",
+  logic:["Блоки: сбор, пленарка, активности/мастер-классы, работа магазина и стойки выдачи.","Точный список и время мастер-классов даёт клиент позже — сейчас плейсхолдеры."],
+  states:[S("Статично","таймлайн","var(--muted-2)")],
+  open:["Детальное расписание дня — ждём от ПСБ/клиента."] },
+
+"wa-activities":{ ico:"🗺", title:"Карта активностей",
+  purpose:"Где что проходит и сколько баллов даёт. Статус точки: пройдено / доступно.",
+  logic:["Точки с баллами из ТЗ. Отметку ставит <b>менеджер</b> (скан/ID) — не сам участник.","Кофе/фото/караоке — точки <b>траты</b> баллов, не заработка.","«Пройдено» подтягивается из транзакций начисления."],
+  states:[S("Доступно","точка не пройдена","var(--info)"),S("Пройдено","баллы начислены","var(--ok)"),S("Множитель","золотой час x2 (опц.)","var(--gold)")],
+  open:["«Золотой час» — под вопросом на v1."] },
+
+"wa-points":{ ico:"⭐", title:"Баллы и прогресс",
+  purpose:"Баланс, история начислений/трат, прогресс до следующей награды. Геймификация = мотивация проходить точки.",
+  logic:["История = лог транзакций (начисления менеджером + траты в магазине).","Прогресс-бар до ближайшей желаемой позиции мерча.","Баланс = начислено − потрачено (оформленные заказы)."],
+  states:[S("Есть история","начисления и траты","var(--ok)"),S("Пусто","нет активностей → подсказка как заработать","var(--muted-2)")],
+  open:["Финальный баланс/стоимости баллов финализируются с ПСБ."] },
+
+"wa-shop":{ ico:"🛍", title:"Магазин мерча",
+  purpose:"Внутренняя валюта — баллы. Студент сам выбирает позицию по цене. Призовой фонд ~500 шт (7 позиций) + безлимит кофе/фото/караоке.",
+  logic:["Цены и остатки из ТЗ; остатки уменьшаются при оформлении.","Позиции: физический мерч (выдача на стойке) и точки-траты (кофе/фото/караоке, ∞).","Состояния карточки: доступно / не хватает баллов / закончилось."],
+  states:[S("Доступно","хватает баллов и есть остаток","var(--ok)"),S("Не хватает","цена > баланса","var(--warn)"),S("Закончилось","остаток 0","var(--bad)"),S("∞","кофе/фото/караоке без лимита","var(--info)")],
+  open:[] },
+
+"wa-item":{ ico:"🎁", title:"Карточка товара / обмен",
+  purpose:"Детали позиции и оформление обмена баллов.",
+  logic:["Обмен списывает баллы и создаёт <b>заказ</b> (право на выдачу) со статусом «оформлено».","Выдаёт позже менеджер на стойке по QR/ID — здесь только резерв.","Кнопка неактивна, если не хватает баллов или позиция закончилась (с причиной)."],
+  states:[S("Обмен","хватает → оформить","var(--ok)"),S("Заблок.","мало баллов / нет в наличии","var(--bad)"),S("Оформлено","заказ создан → показать QR на стойке","var(--info)")],
+  open:[] },
+
+"wa-orders":{ ico:"📦", title:"Мои заказы (право на выдачу)",
+  purpose:"Оформленные позиции и их статус выдачи. По ним менеджер выдаёт мерч.",
+  logic:["Статусы: <b>оформлено</b> (ждёт выдачи) → <b>выдано</b> (менеджер отметил).","Показываем QR/ID для стойки."],
+  states:[S("Есть","список заказов","var(--ok)"),S("Пусто","ещё ничего не оформлено","var(--muted-2)")],
+  open:[] },
+
+"wa-workshops":{ ico:"🎓", title:"Мастер-классы",
+  purpose:"Сущность «мероприятие» с несколькими сессиями (разное время, свой лимит мест). Ориентировочно 4 МК, часть параллельно.",
+  logic:["Заходишь в МК → видишь свободные слоты → записываешься → можешь отменить.","Лимит мест на сессию; при заполнении — «мест нет».","Параллельные сессии в одно время → предупреждение о пересечении."],
+  states:[S("Свободно","есть места","var(--ok)"),S("Мало мест","free ≤ 3","var(--warn)"),S("Мест нет","free = 0","var(--bad)"),S("Записан","бронь есть → отмена","var(--info)")],
+  open:["Точный список, темы, длительность, вместимость и параллельность — даёт клиент."] },
+
+"wa-sessions":{ ico:"⏰", title:"Сессии мастер-класса",
+  purpose:"Выбор конкретного времени внутри мастер-класса.",
+  logic:["У каждой сессии своё время и лимит; счётчик свободных мест в реальном времени.","Запись/отмена меняет счётчик; двойную запись на одно время не даём (пересечение).","Начисление 15 баллов — по факту посещения (отмечает менеджер), не за саму запись."],
+  states:[S("Запись","место есть","var(--ok)"),S("Мест нет","лимит исчерпан","var(--bad)"),S("Пересечение","конфликт по времени","var(--warn)")],
+  open:[] },
+
+"wa-profile":{ ico:"🆔", title:"Профиль · QR / ID",
+  purpose:"Персональный QR и 5–7-значный ID для начисления и выдачи. Плюс статус данных и согласий.",
+  logic:["QR/ID совпадают с ботом — один участник.","Показываем e-mail со статусом (подтверждён/нет) и возможность сменить.","Подпись: покажи менеджеру для начисления баллов и выдачи мерча."],
+  states:[S("Готово","QR + ID + статусы","var(--ok)")],
+  open:[] }
+};
+
+/* =========================================================================
+   Рендер заметок
+   ========================================================================= */
+var currentKey="bu-start";
+function setNotes(key){ currentKey=key; renderNotes(); }
+function renderNotes(){
+  var box=$("#notesBody"); var n=NOTES[currentKey];
+  if(!n){ box.innerHTML='<div class="nb-empty">Выбери экран</div>'; return; }
+  var h='<div class="note-block">';
+  h+='<div class="nb-title"><span class="nb-ico">'+n.ico+'</span>'+esc(n.title)+'</div>';
+  h+='<div class="nb-purpose">'+n.purpose+'</div>';
+  if(n.logic&&n.logic.length){ h+='<div class="nb-h">Логика</div><ul class="nb-logic">'; n.logic.forEach(function(l){h+='<li>'+l+'</li>';}); h+='</ul>'; }
+  if(n.states&&n.states.length){ h+='<div class="nb-h">Состояния</div><div class="nb-states">';
+    n.states.forEach(function(s){ h+='<div class="nb-state"><span class="ns-dot" style="background:'+s.c+'"></span><span><span class="ns-k">'+esc(s.k)+'</span> — <span class="ns-d">'+esc(s.d)+'</span></span></div>'; });
+    h+='</div>'; }
+  if(n.open&&n.open.length){ h+='<div class="nb-h">Открытые вопросы</div>';
+    n.open.forEach(function(o){ h+='<div class="nb-open"><span class="o-i">❓</span><span>'+esc(o)+'</span></div>'; }); }
+  h+='</div>'; box.innerHTML=h;
+}
+
+/* =========================================================================
+   Навигация по экранам (левый рельс)
+   ========================================================================= */
+var NAV = {
+  botuser:[
+    {r:"buStart",  ico:"🚀", label:"/start · вход"},
+    {r:"buConsent",ico:"🔒", label:"Согласие ПД / правила"},
+    {r:"buOpen",   ico:"✅", label:"Меню · открыт Web App"},
+    {r:"buId",     ico:"🆔", label:"Персональный ID / QR"},
+    {r:"buPush",   ico:"🔔", label:"Примеры пушей"},
+    {r:"buHelp",   ico:"ℹ️", label:"Помощь / FAQ"}
+  ],
+  botmgr:[
+    {r:"bmMenu",     ico:"🧭", label:"Меню менеджера"},
+    {r:"bmAct",      ico:"📍", label:"Выбор активности"},
+    {r:"bmEnter",    ico:"🔢", label:"Ввод ID / скан QR"},
+    {r:"bmOk",       ico:"✅", label:"Начислено (успех)"},
+    {r:"bmNotFound", ico:"⚠️", label:"Участник не найден", edge:true},
+    {r:"bmDup",      ico:"⛔", label:"Уже отмечен", edge:true},
+    {r:"bmMerch",    ico:"🎁", label:"Выдача мерча"},
+    {r:"bmMerchOk",  ico:"✅", label:"Выдано (успех)"},
+    {r:"bmMerchLow", ico:"⛔", label:"Недостаточно баллов", edge:true}
+  ],
+  webapp:[
+    {r:"waSoon",     ico:"⏳", label:"Экран «Скоро»", grp:"Гейт и вход"},
+    {r:"waRegister", ico:"📝", label:"Регистрация"},
+    {r:"waRegErr",   ico:"❗", label:"Ошибки формы", edge:true},
+    {r:"waEmail",    ico:"✉️", label:"Подтверждение e-mail"},
+    {r:"waHome",     ico:"🏠", label:"Главная", grp:"Основное"},
+    {r:"waAbout",    ico:"📄", label:"О мероприятии"},
+    {r:"waSchedule", ico:"🗓", label:"Расписание"},
+    {r:"waActivities",ico:"🗺",label:"Карта активностей"},
+    {r:"waPoints",   ico:"⭐", label:"Баллы и прогресс"},
+    {r:"waShop",     ico:"🛍", label:"Магазин мерча", grp:"Мерч и МК"},
+    {r:"waItemDemo", ico:"🎁", label:"Карточка товара"},
+    {r:"waOrders",   ico:"📦", label:"Мои заказы"},
+    {r:"waWorkshops",ico:"🎓", label:"Мастер-классы"},
+    {r:"waSessDemo", ico:"⏰", label:"Выбор сессии"},
+    {r:"waProfile",  ico:"🆔", label:"Профиль · QR/ID", grp:"Профиль"}
+  ]
+};
+var SURF_LABEL={botuser:"Бот участника",botmgr:"Бот менеджера",webapp:"Web App участника"};
+var activeR=null;
+function renderNav(surface){
+  var body=$("#navBody"); $("#navSub").textContent=SURF_LABEL[surface];
+  var items=NAV[surface], h="", lastGrp=null;
+  items.forEach(function(it){
+    if(it.grp&&it.grp!==lastGrp){ h+='<div class="nav-g-t">'+esc(it.grp)+'<span class="gline"></span></div>'; lastGrp=it.grp; }
+    h+='<button class="nav-item'+(it.r===activeR?" active":"")+'" data-act="go" data-r="'+it.r+'">'+
+       '<span class="ni-ico">'+it.ico+'</span><span>'+esc(it.label)+'</span>'+
+       (it.edge?'<span class="ni-tag edge">edge</span>':"")+'</button>';
+  });
+  body.innerHTML=h;
+}
+function markNav(r){ activeR=r; $all(".nav-item").forEach(function(b){ b.classList.toggle("active", b.dataset.r===r); }); }
+
+/* =========================================================================
+   Переключение поверхностей
+   ========================================================================= */
+var HINTS={
+  botuser:"Бот участника — кликай кнопки, диалог живой",
+  botmgr:"Бот менеджера — введи ID или выбери сценарий",
+  webapp:"Web App — вкладки снизу, кнопки внутри живые"
+};
+function showSurface(name){
+  $all(".surf-btn").forEach(function(b){ b.classList.toggle("active", b.dataset.surface===name); });
+  ["botuser","botmgr","webapp"].forEach(function(s){ $("#s-"+s).hidden = (s!==name); });
+  renderNav(name); $("#stageHint").textContent=HINTS[name];
+  if(name==="botuser") R.buStart();
+  else if(name==="botmgr") R.bmMenu();
+  else R.waHome();
+  closeDrawers();
+}
+
+/* =========================================================================
+   БОТ УЧАСТНИКА
+   ========================================================================= */
+function chatSet(id,html){ var c=$(id); c.innerHTML=html; c.scrollTop=c.scrollHeight; }
+function chatAdd(id,html){ var c=$(id); c.insertAdjacentHTML("beforeend",html); c.scrollTop=c.scrollHeight; }
+function mIn(t,time){ return '<div class="msg in">'+t+(time?'<span class="time">'+time+'</span>':"")+'</div>'; }
+function mOut(t,time){ return '<div class="msg out">'+esc(t)+(time?'<span class="time">'+time+'</span>':"")+'</div>'; }
+function svc(t){ return '<div class="msg svc">'+t+'</div>'; }
+function day(t){ return '<div class="day">'+t+'</div>'; }
+function ik(btns){ var h='<div class="ik'+(btns._grid?" grid2":"")+'">'; btns.forEach(function(b){ if(b._sp)return; h+='<button class="ik-btn'+(b.cls?" "+b.cls:"")+'" data-act="'+b.act+'"'+(b.d?dataAttrs(b.d):"")+'>'+b.t+(b.sub?' <small>'+b.sub+'</small>':"")+'</button>'; }); return h+'</div>'; }
+function dataAttrs(o){ var s=""; for(var k in o) s+=' data-'+k+'="'+esc(o[k])+'"'; return s; }
+
+var REPLY_KB_USER='<div class="rk"><button class="rk-btn wide" data-act="go" data-r="buOpen">🎮 Открыть приложение</button>'+
+  '<button class="rk-btn" data-act="go" data-r="buId">🆔 Мой QR/ID</button>'+
+  '<button class="rk-btn" data-act="go" data-r="buHelp">ℹ️ Помощь</button></div>'+
+  '<div class="tg-field"><span class="att"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.5 12.5 21a4 4 0 0 1-6-6l8-8a2.5 2.5 0 0 1 4 4l-8 8"/></svg></span>'+
+  '<input placeholder="Сообщение" readonly><span class="snd"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 20l18-8L3 4v6l12 2-12 2z"/></svg></span></div>';
+
+var R = {}; // реестр рендереров (для nav и кнопок)
+
+R.buStart=function(){
+  markNav("buStart"); setNotes("bu-start");
+  chatSet("#chatUser",
+    day("6 октября")+
+    svc("Вы перешли по QR-коду со стикера · источник: <b>stolovaya</b>")+
+    mOut("/start","10:24")+
+    mIn("👋 Привет! Это бот карьерного дня <b>ПСБ × Финуниверситет</b>.<br><br>Здесь ты копишь <b>баллы</b> за активности и меняешь их на мерч, записываешься на мастер-классы и получаешь свой персональный QR.<br><br>Чтобы продолжить, подтверди согласие 👇","10:24")+
+    ik([{t:"Продолжить →",act:"go",d:{r:"buConsent"},cls:"webapp"}])
+  );
+  $("#inputUser").innerHTML='<div class="tg-field"><input placeholder="Сообщение" readonly><span class="snd"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 20l18-8L3 4v6l12 2-12 2z"/></svg></span></div>';
+};
+
+R.buConsent=function(){
+  markNav("buConsent"); setNotes("bu-consent");
+  chatSet("#chatUser",
+    day("6 октября")+
+    mOut("/start","10:24")+
+    mIn("Перед стартом нужно согласие на обработку персональных данных и принятие правил.<br><br><i>Тексты — от ПСБ.</i>","10:24")+
+    ik([
+      {t:"✅ Соглашаюсь",act:"consentOk",cls:"webapp"},
+      {t:"📄 Политика ПД",act:"consentDoc",d:{doc:"Политика обработки ПД"},cls:"ghost"},
+      {t:"📄 Правила",act:"consentDoc",d:{doc:"Правила участия"},cls:"ghost"}
+    ])
+  );
+  $("#inputUser").innerHTML='<div class="tg-field"><input placeholder="Сообщение" readonly><span class="snd"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 20l18-8L3 4v6l12 2-12 2z"/></svg></span></div>';
+};
+
+R.buOpen=function(){
+  markNav("buOpen"); setNotes("bu-open");
+  chatSet("#chatUser",
+    day("6 октября")+
+    mIn("✅ Согласие принято. Добро пожаловать!<br><br>Всё самое интересное — в приложении: анкета, баллы, карта активностей, магазин мерча и запись на мастер-классы.","10:25")+
+    ik([{t:"🎮 Открыть приложение",act:"openWebApp",cls:"webapp"}])+
+    mIn("Твой персональный QR и ID всегда в меню ниже — показывай их менеджеру, чтобы получать баллы.","10:25")
+  );
+  $("#inputUser").innerHTML=REPLY_KB_USER;
+};
+
+R.buId=function(){
+  markNav("buId"); setNotes("bu-id");
+  chatSet("#chatUser",
+    '<div class="pin"><span class="pt">Закреплено</span><br>Твой QR и ID для начисления баллов</div>'+
+    mIn('Покажи это менеджеру на точке — по ID или QR тебе начислят баллы и выдадут мерч.'+
+        '<div class="qrbox">'+qrSVG(PARTICIPANT.id,150)+'<div class="idbig">'+PARTICIPANT.id+'</div><div style="font-size:11px;color:#888">ID участника</div></div>'+
+        'Никому не пересылай — отмечать может только менеджер.',"10:25")
+  );
+  $("#inputUser").innerHTML=REPLY_KB_USER;
+};
+
+R.buPush=function(){
+  markNav("buPush"); setNotes("bu-push");
+  var h=day("Лента пушей · черновики Deep");
+  PUSHES.forEach(function(p,i){
+    var extra = p.wa ? ik([{t:"🎮 Открыть приложение",act:"openWebApp",cls:"webapp"}]) :
+                p.filter ? '<div style="margin:2px 0 8px"><span class="chip info" style="font-size:10px">сегмент: не заполнил данные</span></div>' : "";
+    h+= mIn('<span class="push-tag">'+esc(p.tag)+'</span><br>'+esc(p.txt), "09:0"+i) + extra;
+  });
+  chatSet("#chatUser",h);
+  $("#inputUser").innerHTML=REPLY_KB_USER;
+};
+
+R.buHelp=function(){
+  markNav("buHelp"); setNotes("bu-help");
+  chatSet("#chatUser",
+    mOut("ℹ️ Помощь","10:40")+
+    mIn("<b>Как копить баллы?</b> Проходи активности — менеджер отметит тебя по QR/ID.<br><br><b>Где мой QR?</b> Кнопка «Мой QR/ID» ниже.<br><br><b>Как записаться на мастер-класс?</b> В приложении → «Мастер-классы».<br><br><b>Где мерч?</b> Стойка на 1 этаже. Оформи в магазине и покажи QR.","10:40")+
+    ik([{t:"🎮 Открыть приложение",act:"openWebApp",cls:"webapp"},{t:"🆔 Мой QR/ID",act:"go",d:{r:"buId"}}])
+  );
+  $("#inputUser").innerHTML=REPLY_KB_USER;
+};
+
+/* =========================================================================
+   БОТ МЕНЕДЖЕРА
+   ========================================================================= */
+var mgrCtx={ mode:null, actId:null, entered:"" };
+var REPLY_KB_MGR='<div class="rk"><button class="rk-btn" data-act="go" data-r="bmAct">✅ Отметить участника</button>'+
+  '<button class="rk-btn" data-act="go" data-r="bmMerch">🎁 Выдать мерч</button>'+
+  '<button class="rk-btn wide" data-act="mgrStats">📊 Моя статистика</button></div>';
+
+R.bmMenu=function(){
+  markNav("bmMenu"); setNotes("bm-menu"); mgrCtx={mode:null,actId:null,entered:""};
+  chatSet("#chatMgr",
+    day("6 октября · режим менеджера")+
+    mIn("👷 Привет, <b>Мария</b>! Ты вошла как <b>менеджер</b>.<br><br>Выбери действие внизу или из меню:","13:50")+
+    ik([{t:"✅ Отметить участника",act:"go",d:{r:"bmAct"},cls:"webapp"},{t:"🎁 Выдать мерч",act:"go",d:{r:"bmMerch"}}])
+  );
+  $("#inputMgr").innerHTML=REPLY_KB_MGR;
+};
+
+R.bmAct=function(){
+  markNav("bmAct"); setNotes("bm-act"); mgrCtx.mode="mark"; mgrCtx.actId=null; mgrCtx.entered="";
+  var btns=ACTS.filter(function(a){return a.id!=="reg";}).map(function(a){
+    return {t:a.ico+" "+a.t, sub:(a.pts!=null?"+"+a.pts:"баллы уточн."), act:"mgrPickAct", d:{a:a.id}};
+  });
+  chatSet("#chatMgr",
+    mOut("✅ Отметить участника","13:58")+
+    mIn("Выбери точку/активность, которую засчитываешь:","13:58")+
+    ik(btns)
+  );
+  $("#inputMgr").innerHTML=REPLY_KB_MGR;
+};
+
+function bmEnterScreen(){
+  markNav("bmEnter"); setNotes("bm-id");
+  var a=actById(mgrCtx.actId);
+  chatSet("#chatMgr",
+    mOut((mgrCtx.mode==="merch"?"🎁 Выдать мерч":"✅ "+(a?a.t:"")) ,"13:59")+
+    mIn("Введи <b>5–7-значный ID</b> участника или отсканируй его QR.","13:59")+
+    keypadBlock()
+  );
+  $("#inputMgr").innerHTML=
+    '<div class="rk one"><button class="rk-btn wide" data-act="mgrScan">📷 Сканировать QR</button></div>'+
+    '<div style="font-size:11px;color:var(--scr-muted);text-align:center;margin:2px 0 6px">быстрые сценарии для демо:</div>'+
+    '<div class="rk"><button class="rk-btn" data-act="mgrDemo" data-v="482913">482913 · Иван</button>'+
+    '<button class="rk-btn" data-act="mgrDemo" data-v="000000">000000 · нет</button></div>';
+  updKeypadDisplay();
+}
+R.bmEnter=function(){ if(!mgrCtx.mode){mgrCtx.mode="mark";} if(!mgrCtx.actId&&mgrCtx.mode==="mark"){mgrCtx.actId="plenary";} mgrCtx.entered=""; bmEnterScreen(); };
+
+function keypadBlock(){
+  var keys=["1","2","3","4","5","6","7","8","9","⌫","0","OK"];
+  var h='<div class="ik" style="background:#fff;border-radius:12px;padding:10px;gap:8px">'+
+    '<div style="text-align:center;font-family:var(--mono);font-size:22px;font-weight:700;letter-spacing:4px;color:#111;min-height:28px" id="kpDisp">—</div>'+
+    '<div class="tg-numkey">';
+  keys.forEach(function(k){
+    var cls = (k==="OK"?"numk act":"numk");
+    h+='<button class="'+cls+'" data-act="mgrKey" data-k="'+k+'">'+k+'</button>';
+  });
+  h+='</div></div>';
+  return h;
+}
+function updKeypadDisplay(){ var d=$("#kpDisp"); if(d) d.textContent = mgrCtx.entered||"—"; }
+
+function mgrResolve(){
+  var id=mgrCtx.entered;
+  if(id!=="482913"){ R.bmNotFound(); return; }
+  if(mgrCtx.mode==="merch"){ bmMerchCard(); return; }
+  var a=actById(mgrCtx.actId);
+  var key=mgrCtx.actId;
+  if(state.marked[key]){ R.bmDup(); return; }
+  // карточка + подтверждение
+  setNotes("bm-id");
+  chatAdd("#chatMgr",
+    mIn("Найден участник:","14:01")+
+    mIn('<b>'+esc(PARTICIPANT.fio)+'</b> · ID '+PARTICIPANT.id+'<br>Баланс: <b>'+balance()+' б.</b><br>Точка: '+a.ico+' '+esc(a.t)+'<br><br>Начислить <b>+'+a.pts+'</b>?',"14:01")+
+    ik([{t:"Начислить +"+a.pts,act:"mgrConfirmMark",cls:"webapp"},{t:"Отмена",act:"go",d:{r:"bmAct"},cls:"ghost"}])
+  );
+}
+
+R.bmOk=function(){
+  markNav("bmOk"); setNotes("bm-ok");
+  var a=actById(mgrCtx.actId&&mgrCtx.actId!=="reg"?mgrCtx.actId:"mk"); if(!a)a=actById("mk");
+  chatSet("#chatMgr",
+    mIn('✅ <b>Начислено +'+a.pts+'</b><br>'+esc(PARTICIPANT.short)+' · '+esc(a.t)+'<br>Новый баланс: <b>'+(balance()+ (state.marked[a.id]?0:a.pts))+' б.</b>',"14:01")+
+    ik([{t:"➕ Отметить ещё",act:"go",d:{r:"bmAct"},cls:"webapp"},{t:"🧭 В меню",act:"go",d:{r:"bmMenu"},cls:"ghost"}])
+  );
+  $("#inputMgr").innerHTML=REPLY_KB_MGR;
+};
+
+R.bmNotFound=function(){
+  markNav("bmNotFound"); setNotes("bm-notfound");
+  chatSet("#chatMgr",
+    mOut("ID: "+ (mgrCtx.entered||"000000"),"14:00")+
+    mIn("⚠️ <b>Участник не найден.</b><br>Проверь ID или попроси участника открыть бота — без входа в бота регистрации нет.","14:00")+
+    ik([{t:"🔁 Ввести заново",act:"go",d:{r:"bmEnter"},cls:"webapp"},{t:"🧭 В меню",act:"go",d:{r:"bmMenu"},cls:"ghost"}])
+  );
+  $("#inputMgr").innerHTML=REPLY_KB_MGR;
+};
+
+R.bmDup=function(){
+  markNav("bmDup"); setNotes("bm-dup");
+  var a=actById(mgrCtx.actId&&mgrCtx.actId!=="reg"?mgrCtx.actId:"plenary")||actById("plenary");
+  var when=(state.marked[a.id]&&state.marked[a.id].t)||"13:12";
+  chatSet("#chatMgr",
+    mOut("ID: 482913","14:05")+
+    mIn("⛔ <b>Уже отмечен</b> на точке «"+esc(a.t)+"» сегодня в "+when+".<br>Повторное начисление невозможно (антифрод).","14:05")+
+    ik([{t:"📍 Другая точка",act:"go",d:{r:"bmAct"},cls:"webapp"},{t:"🧭 В меню",act:"go",d:{r:"bmMenu"},cls:"ghost"}])
+  );
+  $("#inputMgr").innerHTML=REPLY_KB_MGR;
+};
+
+/* --- мерч (менеджер) --- */
+R.bmMerch=function(){ markNav("bmMerch"); setNotes("bm-merch"); mgrCtx.mode="merch"; mgrCtx.actId=null; mgrCtx.entered=""; bmEnterScreen(); };
+
+function bmMerchCard(){
+  markNav("bmMerch"); setNotes("bm-merch");
+  var issuedNote = state.issued["note"];
+  chatAdd("#chatMgr",
+    mIn("Найден участник:","14:20")+
+    mIn('<b>'+esc(PARTICIPANT.fio)+'</b> · ID '+PARTICIPANT.id+'<br>Баланс: <b>'+balance()+' б.</b>',"14:20")+
+    mIn("<b>Право на выдачу</b> (оформлено в приложении):",'')+
+    ik([ issuedNote
+        ? {t:"📓 Блокнот — выдано ✔",act:"noop",cls:"ghost"}
+        : {t:"📓 Блокнот (20 б.) — Выдать",act:"mgrIssueRes",d:{item:"note"},cls:"webapp"} ])+
+    mIn("Или оплата баллами прямо на стойке:",'')+
+    ik([{t:"🍶 Бутылка",sub:"35 б.",act:"mgrPayItem",d:{item:"bottle"}},{t:"🧥 Толстовка",sub:"50 б.",act:"mgrPayItem",d:{item:"hoodie"}}])
+  );
+  $("#inputMgr").innerHTML=REPLY_KB_MGR;
+}
+
+R.bmMerchOk=function(){
+  markNav("bmMerchOk"); setNotes("bm-merch-ok");
+  chatSet("#chatMgr",
+    mIn("✅ <b>Выдано: Блокнот</b><br>"+esc(PARTICIPANT.short)+" · 14:21<br>Позиция закрыта — повторно не выдать.","14:21")+
+    ik([{t:"🎁 Выдать ещё",act:"go",d:{r:"bmMerch"},cls:"webapp"},{t:"🧭 В меню",act:"go",d:{r:"bmMenu"},cls:"ghost"}])
+  );
+  $("#inputMgr").innerHTML=REPLY_KB_MGR;
+};
+
+R.bmMerchLow=function(){
+  markNav("bmMerchLow"); setNotes("bm-merch-low");
+  chatSet("#chatMgr",
+    mOut("Оплата баллами: Толстовка","14:22")+
+    mIn("⛔ <b>Недостаточно баллов.</b><br>Нужно <b>50</b>, на балансе <b>41</b>.<br>Предложи позицию дешевле или добрать баллы на активностях.","14:22")+
+    ik([{t:"🍶 Бутылка (35 б.)",act:"mgrPayItem",d:{item:"bottle"},cls:"webapp"},{t:"🧭 В меню",act:"go",d:{r:"bmMenu"},cls:"ghost"}])
+  );
+  $("#inputMgr").innerHTML=REPLY_KB_MGR;
+};
+
+/* =========================================================================
+   WEB APP
+   ========================================================================= */
+var WA_TABS=[
+  {id:"home", label:"Главная", ico:'<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/>'},
+  {id:"activities", label:"Активности", ico:'<path d="M9 20l-5-3V4l5 3 6-3 5 3v13l-5-3-6 3z"/><path d="M9 7v13M15 4v13"/>'},
+  {id:"shop", label:"Магазин", ico:'<path d="M6 2 3 6v14h18V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>'},
+  {id:"workshops", label:"МК", ico:'<path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1 3 3 6 3s6-2 6-3v-5"/>'},
+  {id:"profile", label:"Профиль", ico:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>'}
+];
+var TAB_OF={home:"home",about:"home",schedule:"home",points:"home",activities:"activities",shop:"shop",item:"shop",orders:"shop",workshops:"workshops",sessions:"workshops",profile:"profile"};
+function renderTabbar(active){
+  $("#waTabbar").innerHTML=WA_TABS.map(function(t){
+    return '<button class="tab'+(t.id===active?" active":"")+'" data-act="waTab" data-id="'+t.id+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">'+t.ico+'</svg>'+t.label+'</button>';
+  }).join("");
+}
+
+var waStack=[];
+function showWa(id, opts){
+  opts=opts||{};
+  var body=$("#waBody"); body.innerHTML = waScreenHTML(id, opts);
+  body.scrollTop=0;
+  // header
+  var titles={home:"ПСБ · Финунивер",soon:"ПСБ · Финунивер",register:"Регистрация",email:"E-mail",about:"О мероприятии",schedule:"Расписание",activities:"Карта активностей",points:"Баллы и прогресс",shop:"Магазин мерча",item:(opts.item?merchById(opts.item).t:"Товар"),orders:"Мои заказы",workshops:"Мастер-классы",sessions:(opts.ws?wsById(opts.ws).n:"Сессии"),profile:"Профиль"};
+  $("#waTitle").textContent=titles[id]||"ПСБ · Финунивер";
+  var topLevel=["home","soon","register","activities","shop","workshops","profile"];
+  var back=$("#waBack"); back.classList.toggle("show", topLevel.indexOf(id)<0);
+  // tabbar
+  var gate = (id==="soon"||id==="register"||id==="email");
+  $("#waTabbar").hidden = gate;
+  if(!gate) renderTabbar(TAB_OF[id]||"home");
+  // notes
+  var nk = (opts.notes)||("wa-"+id);
+  setNotes(nk);
+  waStack.push({id:id,opts:opts});
+  if(waStack.length>30) waStack.shift();
+}
+function wsById(id){ return WORKSHOPS.find(function(w){return w.id===id;}); }
+function waBack(){ waStack.pop(); var prev=waStack.pop(); if(prev) showWa(prev.id,prev.opts); else showWa("home"); }
+
+/* ----- рендер экранов web app ----- */
+function waScreenHTML(id,opts){
+  if(id==="soon") return waSoon();
+  if(id==="register") return waRegister(opts.errors);
+  if(id==="email") return waEmail(opts.step);
+  if(id==="home") return waHome();
+  if(id==="about") return waAbout();
+  if(id==="schedule") return waSchedule();
+  if(id==="activities") return waActivities();
+  if(id==="points") return waPoints();
+  if(id==="shop") return waShop();
+  if(id==="item") return waItem(opts.item);
+  if(id==="orders") return waOrders();
+  if(id==="workshops") return waWorkshops();
+  if(id==="sessions") return waSessions(opts.ws);
+  if(id==="profile") return waProfile();
+  return '<div class="wa-screen">—</div>';
+}
+
+function waSoon(){
+  return '<div class="soon">'+
+    '<div class="s-emo">⏳</div>'+
+    '<h2>Скоро открытие</h2>'+
+    '<p>Приложение карьерного дня ПСБ появится здесь совсем скоро. Загляни ближе к 6 октября!</p>'+
+    '<div class="s-count"><div><b>14</b><span>дней</span></div><div><b>06</b><span>часов</span></div><div><b>12</b><span>минут</span></div></div>'+
+    '<div style="margin-top:18px;width:100%;max-width:280px"><button class="mainbtn sec" data-act="noop">🔔 Напомнить о запуске</button></div>'+
+    '<div style="font-size:11px;color:var(--scr-muted-2);margin-top:14px">Тестеры, менеджеры и админы уже видят рабочую версию</div>'+
+  '</div>';
+}
+
+function consentRows(checked){
+  var c=checked?"checked":"";
+  return '<label class="consent"><input type="checkbox" '+c+' data-act="regCheck"><span class="c-t"><span class="must">Обязательно.</span> Согласен на обработку персональных данных — <a>политика</a>.</span></label>'+
+    '<label class="consent"><input type="checkbox" '+c+' data-act="regCheck"><span class="c-t">Согласен получать рекламную рассылку ПСБ (вакансии, стажировки) — <a>условия</a>.</span></label>'+
+    '<label class="consent"><input type="checkbox" '+c+' data-act="regCheck"><span class="c-t muted">Отдельное согласие на рекрутинговые сообщения <span style="color:var(--accent);font-weight:600">(состав 2/3 — уточняется у ПСБ)</span>.</span></label>';
+}
+function waRegister(errors){
+  var e=errors||{};
+  return '<div class="wa-screen">'+
+    '<div class="note blk"><span class="n-i">🔒</span><span>Заполни анкету, чтобы копить и тратить баллы. За заполнение — <b>стартовые баллы</b>. Остальные разделы пока заблокированы.</span></div>'+
+    '<div class="field"><label>ФИО <span class="req">*</span></label><input class="inp'+(e.fio?" err":"")+'" id="rFio" value="'+esc(state.fio)+'" placeholder="Иванов Иван Иванович"><div class="err-msg'+(e.fio?" show":"")+'">⚠ Укажите ФИО</div></div>'+
+    '<div class="field"><label>E-mail <span class="req">*</span></label><input class="inp'+(e.email?" err":"")+'" id="rEmail" value="" placeholder="you@example.ru" inputmode="email"><div class="err-msg'+(e.email?" show":"")+'">⚠ '+(e.email||"Некорректный e-mail")+'</div></div>'+
+    '<div class="field"><label>Телефон <span class="req">*</span></label><input class="inp'+(e.phone?" err":"")+'" id="rPhone" value="" placeholder="+7 (___) ___-__-__" inputmode="tel"><div class="err-msg'+(e.phone?" show":"")+'">⚠ Укажите телефон</div></div>'+
+    '<div class="sec-t">Согласия</div>'+
+    consentRows(false)+
+    '<div style="height:12px"></div>'+
+    '<button class="mainbtn" data-act="regSubmit">Сохранить и продолжить</button>'+
+    '<div style="font-size:11px;color:var(--scr-muted);text-align:center;margin-top:10px">Данные защищены. Обязательность полей — на согласовании с ПСБ.</div>'+
+  '</div>';
+}
+
+function waEmail(step){
+  step=step||"start";
+  if(step==="sent") return '<div class="wa-screen">'+
+    '<div class="note info"><span class="n-i">✉️</span><span>Код отправлен на <b>'+esc(state.email)+'</b>. Введите 4 цифры из письма.</span></div>'+
+    '<div class="field"><label>Код из письма</label><input class="inp" id="emCode" placeholder="0000" inputmode="numeric" maxlength="4" style="text-align:center;font-family:var(--mono);font-size:22px;letter-spacing:8px"></div>'+
+    '<button class="mainbtn" data-act="emConfirm">Подтвердить</button>'+
+    '<button class="mainbtn ghost" data-act="emResend" style="margin-top:9px">Отправить код повторно</button>'+
+  '</div>';
+  return '<div class="wa-screen">'+
+    '<div class="note '+(state.emailVerified?"ok":"warn")+'"><span class="n-i">'+(state.emailVerified?"✅":"⚠️")+'</span><span>E-mail '+(state.emailVerified?"подтверждён":"не подтверждён")+'. Это главный контакт для рассылки вакансий и стажировок ПСБ.</span></div>'+
+    '<div class="field"><label>E-mail</label><input class="inp" id="emEmail" value="'+esc(state.email)+'" inputmode="email"></div>'+
+    (state.emailVerified
+      ? '<div class="chip ok" style="margin-bottom:10px">✔ Подтверждён</div><button class="mainbtn sec" data-act="emStart">Изменить e-mail</button>'
+      : '<button class="mainbtn" data-act="emStart">Отправить код подтверждения</button>')+
+    '<div style="font-size:11px;color:var(--scr-muted);text-align:center;margin-top:10px">Верификация — на усмотрение ПСБ (свой SMTP).</div>'+
+  '</div>';
+}
+
+function waHome(){
+  var bal=balance();
+  return '<div class="wa-screen">'+
+    '<div class="kv"><span class="kv-badge">Ключевой визуал ПСБ</span><div class="kv-t">Карьерный день ПСБ</div><div class="kv-s">Финуниверситет · 6 октября · 11:00–17:00</div><span class="kv-ph">здесь будет КВ от клиента</span></div>'+
+    '<div class="balance"><div class="coin">Б</div><div class="bl"><div class="bl-n">'+bal+'</div><div class="bl-l">баллов на балансе</div></div><button class="bl-go" data-act="waTo" data-id="points">История →</button></div>'+
+    '<div class="note info" style="margin-top:14px"><span class="n-i">⏱</span><span><b>Сейчас идёт:</b> пленарная сессия (до 14:00). Дальше — активности и мастер-классы.</span></div>'+
+    '<div class="tiles">'+
+      tile("schedule","🗓","Расписание","программа дня","#eef4ff")+
+      tile("activities","🗺","Карта активностей","точки и баллы","#fff1e8")+
+      tile("shop","🛍","Магазин мерча","обменять баллы","#fff6d6")+
+      tile("workshops","🎓","Мастер-классы","запись на сессии","#eafaf0")+
+      tile("about","📄","О мероприятии","детали и спикеры","#f2f0ff")+
+      tile("profile","🆔","Мой QR / ID","для начисления","#eaf0ff")+
+    '</div>'+
+  '</div>';
+}
+function tile(id,ico,t,s,bg){
+  return '<button class="tile" data-act="waTo" data-id="'+id+'"><div class="t-ico" style="background:'+bg+'">'+ico+'</div><div class="t-t">'+t+'</div><div class="t-s">'+s+'</div></button>';
+}
+
+function waAbout(){
+  return '<div class="wa-screen">'+
+    '<div class="card"><div class="wa-lead"><b>Карьерный день ПСБ</b> для студентов Финансового университета. Знакомство с банком, вакансиями и стажировками — плюс баллы, мерч и мастер-классы.</div></div>'+
+    '<div class="sec-t">Когда и где</div>'+
+    '<div class="card"><div class="row"><div class="r-ico">📅</div><div class="r-m"><div class="r-t">6 октября</div><div class="r-s">сбор с 11:00</div></div></div>'+
+    '<div class="row"><div class="r-ico">📍</div><div class="r-m"><div class="r-t">Финансовый университет</div><div class="r-s">пленарный зал + холлы</div></div></div></div>'+
+    '<div class="sec-t">Программа</div>'+
+    '<div class="card"><div class="row"><div class="r-ico">🏛</div><div class="r-m"><div class="r-t">11:00–14:00 · Пленарная сессия</div><div class="r-s">топ-спикеры и председатель банка, ведущий-модератор</div></div></div>'+
+    '<div class="row"><div class="r-ico">🎓</div><div class="r-m"><div class="r-t">14:00–17:00 · Активности</div><div class="r-s">мастер-классы, HR-консультации, фестиваль</div></div></div></div>'+
+    '<div class="note warn" style="margin-top:12px"><span class="n-i">✏️</span><span>Тексты и спикеры — плейсхолдер, финальный контент от ПСБ.</span></div>'+
+  '</div>';
+}
+
+function waSchedule(){
+  return '<div class="wa-screen">'+
+    '<div class="tl">'+
+      tlItem("11:00","Сбор и регистрация на входе","получи стартовые баллы за анкету",false)+
+      tlItem("11:00–14:00","Пленарная сессия","председатель банка + топ-менеджеры ПСБ · +25 баллов",true)+
+      tlItem("14:00–17:00","Мастер-классы","≈4 МК, часть параллельно · +15 за посещение",false)+
+      tlItem("14:00–17:00","HR-консультации","+10 баллов",false)+
+      tlItem("14:00–17:00","Фестиваль активностей","быстрые активности · +1, точки кофе/фото/караоке",false)+
+      tlItem("до 17:00","Магазин и стойка выдачи","обменивай баллы на мерч, 1 этаж",false)+
+    '</div>'+
+    '<div class="note warn" style="margin-top:6px"><span class="n-i">⏳</span><span>Точное время и список мастер-классов — от клиента.</span></div>'+
+  '</div>';
+}
+function tlItem(time,title,desc,plen){
+  return '<div class="tl-item'+(plen?" plenary":"")+'"><div class="tl-time">'+time+'</div><div class="tl-title">'+title+'</div><div class="tl-desc">'+desc+'</div></div>';
+}
+
+function waActivities(){
+  var done={plenary:true,reg:true,mk:true};
+  var rows=ACTS.map(function(a){
+    var isDone=done[a.id];
+    var pts=(a.pts!=null?"+"+a.pts:"+?");
+    var chip = a.id==="enter" ? '<span class="chip gray">баллы уточн.</span>' : (isDone?'<span class="chip ok">пройдено</span>':'<span class="chip info">доступно</span>');
+    return '<div class="row"><div class="r-ico">'+a.ico+'</div><div class="r-m"><div class="r-t">'+esc(a.t)+'</div><div class="r-s">'+(a.id==="enter"?"фиксирует менеджер":(isDone?"баллы начислены":"отметит менеджер по QR/ID"))+'</div></div><div class="r-r"><div class="pts'+(a.pts==null?" dim":"")+'">'+pts+'</div>'+chip+'</div></div>';
+  }).join("");
+  var spend='<div class="row"><div class="r-ico">☕</div><div class="r-m"><div class="r-t">Кофе · Фотобудка · Караоке</div><div class="r-s">точки трат баллов на фестивале</div></div><div class="r-r"><div class="pts dim">−2…5</div></div></div>';
+  return '<div class="wa-screen">'+
+    '<div class="map">'+
+      '<div class="floor" style="left:10px;top:8px">1 этаж · холлы</div>'+
+      pin(24,55,"done","🏛","Пленарка")+pin(58,38,"todo","🎓","МК")+pin(80,62,"todo","💼","HR")+pin(42,78,"gold","⚡","Фест")+pin(15,88,"todo","🚪","Вход")+pin(70,86,"todo","☕","Кофе")+
+    '</div>'+
+    '<div class="note info"><span class="n-i">🧭</span><span>Отметку на точке ставит <b>менеджер</b> по твоему QR/ID. Сам себя отметить нельзя.</span></div>'+
+    '<div class="sec-t">Заработать баллы</div><div class="card">'+rows+'</div>'+
+    '<div class="sec-t">Потратить баллы</div><div class="card">'+spend+'</div>'+
+  '</div>';
+}
+function pin(x,y,cls,emo,label){
+  return '<div class="pin-pt" style="left:'+x+'%;top:'+y+'%"><div class="pin-d '+cls+'"><i>'+emo+'</i></div><div class="pin-l">'+label+'</div></div>';
+}
+
+function waPoints(){
+  var bal=balance();
+  var target=merchById("hoodie");
+  var pct=Math.min(100,Math.round(bal/target.price*100));
+  var hist=state.earned.map(function(x){ var a=actById(x.act); return {t:(a?a.t:x.act),ico:(a?a.ico:"⭐"),pts:x.pts,time:x.t,plus:true}; });
+  state.reservations.forEach(function(r){ var m=merchById(r.itemId); hist.push({t:"Обмен: "+m.t,ico:m.emo,pts:m.price,time:r.t,plus:false}); });
+  var rows=hist.map(function(h){
+    return '<div class="row"><div class="r-ico">'+h.ico+'</div><div class="r-m"><div class="r-t">'+esc(h.t)+'</div><div class="r-s">'+h.time+'</div></div><div class="r-r"><div class="pts'+(h.plus?"":" dim")+'">'+(h.plus?"+":"−")+h.pts+'</div></div></div>';
+  }).join("");
+  return '<div class="wa-screen">'+
+    '<div class="balance" style="margin-top:0"><div class="coin">Б</div><div class="bl"><div class="bl-n">'+bal+'</div><div class="bl-l">баллов на балансе</div></div></div>'+
+    '<div class="card" style="margin-top:12px"><div style="display:flex;justify-content:space-between;font-size:12.5px"><span class="muted">До «'+target.t+'» ('+target.price+' б.)</span><b>'+bal+'/'+target.price+'</b></div><div class="prog"><i style="width:'+pct+'%"></i></div><div style="font-size:11.5px" class="muted">Ещё '+Math.max(0,target.price-bal)+' баллов — пройди мастер-класс или HR-консультацию.</div></div>'+
+    '<div class="sec-t">История</div><div class="card">'+(rows||'<div class="muted" style="text-align:center;padding:14px">Пока пусто</div>')+'</div>'+
+  '</div>';
+}
+
+function waShop(){
+  var bal=balance();
+  var cards=MERCH.map(function(m){
+    var left = m.qty===Infinity?Infinity:state.stock[m.id];
+    var sold = left===0;
+    var afford = bal>=m.price;
+    var flag="";
+    if(m.qty===Infinity) flag='<span class="chip info m-flag">∞</span>';
+    else if(sold) flag='<span class="chip no m-flag">нет</span>';
+    else if(!afford) flag='<span class="chip wait m-flag">не хватает</span>';
+    var cover = sold?'<div class="m-cover"><span>Закончилось</span></div>':"";
+    return '<button class="merch'+(sold?" off":"")+'" data-act="waItemOpen" data-item="'+m.id+'">'+
+      '<div class="m-img">'+m.emo+flag+cover+'</div>'+
+      '<div class="m-b"><div class="m-t">'+esc(m.t)+'</div><div class="m-row"><span class="m-price">'+m.price+' б.</span><span class="m-stock">'+(m.qty===Infinity?"без лимита":(left+" шт")) +'</span></div></div>'+
+    '</button>';
+  }).join("");
+  return '<div class="wa-screen">'+
+    '<div class="balance" style="margin-top:0"><div class="coin">Б</div><div class="bl"><div class="bl-n">'+bal+'</div><div class="bl-l">баллов · выбирай позицию по цене</div></div><button class="bl-go" data-act="waTo" data-id="orders">Заказы →</button></div>'+
+    '<div class="sec-t">Призовой фонд <span class="st-r"> ~500 шт</span></div>'+
+    '<div class="shop-grid">'+cards+'</div>'+
+    '<div class="note info" style="margin-top:14px"><span class="n-i">📦</span><span>Оформи обмен → покажи QR на стойке (1 этаж) → менеджер выдаст.</span></div>'+
+  '</div>';
+}
+
+function waItem(itemId){
+  var m=merchById(itemId); if(!m) return '<div class="wa-screen">—</div>';
+  var bal=balance();
+  var left = m.qty===Infinity?Infinity:state.stock[m.id];
+  var sold=left===0, afford=bal>=m.price;
+  var already = state.reservations.some(function(r){return r.itemId===m.id;});
+  var btn;
+  if(sold) btn='<button class="mainbtn" disabled>Закончилось</button>';
+  else if(already) btn='<button class="mainbtn" disabled>Уже оформлено ✔</button>';
+  else if(!afford) btn='<button class="mainbtn" disabled>Не хватает '+(m.price-bal)+' б.</button>';
+  else btn='<button class="mainbtn" data-act="waBuy" data-item="'+m.id+'">Обменять за '+m.price+' б.</button>';
+  var desc = m.spot? "Точка на фестивале — списываем баллы и активируем на месте." : "Физический мерч. Выдаётся на стойке (1 этаж) по твоему QR/ID.";
+  return '<div class="wa-screen">'+
+    '<div class="card" style="text-align:center;padding:26px"><div style="font-size:72px">'+m.emo+'</div><div style="font-size:19px;font-weight:800;margin-top:8px">'+esc(m.t)+'</div>'+
+      '<div style="display:flex;justify-content:center;gap:8px;margin-top:8px"><span class="chip gold">'+m.price+' баллов</span>'+(m.qty===Infinity?'<span class="chip info">без лимита</span>':(sold?'<span class="chip no">закончилось</span>':'<span class="chip ok">'+left+' шт в наличии</span>'))+'</div></div>'+
+    '<div class="card" style="margin-top:10px"><div class="wa-lead">'+desc+'</div></div>'+
+    '<div class="balance" style="margin-top:10px"><div class="coin">Б</div><div class="bl"><div class="bl-n">'+bal+'</div><div class="bl-l">на балансе</div></div></div>'+
+    '<div style="height:12px"></div>'+btn+
+    (afford&&!sold&&!already?'<div style="font-size:11.5px;color:var(--scr-muted);text-align:center;margin-top:8px">Баллы спишутся сразу, выдача — на стойке. Отменить обмен нельзя.</div>':"")+
+  '</div>';
+}
+
+function waOrders(){
+  if(!state.reservations.length) return '<div class="wa-screen"><div class="card" style="text-align:center;padding:36px"><div style="font-size:44px">📦</div><div style="font-weight:700;margin-top:8px">Заказов пока нет</div><div class="muted" style="font-size:12.5px;margin-top:4px">Обменяй баллы в магазине — заказ появится здесь.</div><div style="height:14px"></div><button class="mainbtn sec" data-act="waTo" data-id="shop">В магазин</button></div></div>';
+  var rows=state.reservations.map(function(r){ var m=merchById(r.itemId);
+    var chip = r.status==="issued"?'<span class="chip ok">выдано</span>':'<span class="chip wait">оформлено</span>';
+    return '<div class="row"><div class="r-ico">'+m.emo+'</div><div class="r-m"><div class="r-t">'+esc(m.t)+'</div><div class="r-s">'+r.t+' · '+m.price+' б.</div></div><div class="r-r">'+chip+'</div></div>';
+  }).join("");
+  return '<div class="wa-screen">'+
+    '<div class="note info"><span class="n-i">🆔</span><span>Покажи QR на стойке — менеджер отметит выдачу.</span></div>'+
+    '<div class="card">'+rows+'</div>'+
+    '<div style="height:12px"></div><button class="mainbtn sec" data-act="waTo" data-id="profile">Показать мой QR</button>'+
+  '</div>';
+}
+
+function waWorkshops(){
+  var cards=WORKSHOPS.map(function(w){
+    var booked=w.sessions.find(function(s){return state.bookings[s.id];});
+    var totalFree=w.sessions.reduce(function(a,s){return a+s.free;},0);
+    var status = booked? '<span class="chip info">записан · '+booked.time+'</span>'
+      : totalFree===0? '<span class="chip no">мест нет</span>'
+      : '<span class="chip ok">'+w.sessions.length+' сессии · '+totalFree+' мест</span>';
+    return '<button class="tile wide" data-act="waSessOpen" data-ws="'+w.id+'" style="text-align:left">'+
+      '<div class="t-ico" style="background:#eafaf0">🎓</div>'+
+      '<div style="flex:1"><div class="t-t">'+esc(w.n)+'</div><div class="t-s">'+esc(w.topic)+'</div><div style="margin-top:5px">'+status+'</div></div>'+
+      '<div style="color:var(--accent);font-weight:700">›</div></button>';
+  }).join("");
+  return '<div class="wa-screen">'+
+    '<div class="note info"><span class="n-i">🎓</span><span>Выбери мастер-класс и время. Записаться можно на свободную сессию, потом — отменить.</span></div>'+
+    '<div class="tiles" style="grid-template-columns:1fr">'+cards+'</div>'+
+    '<div class="note warn" style="margin-top:12px"><span class="n-i">⏳</span><span>Названия, темы, длительность и вместимость — от клиента (сейчас пример).</span></div>'+
+  '</div>';
+}
+
+function waSessions(wsId){
+  var w=wsById(wsId); if(!w) return '<div class="wa-screen">—</div>';
+  var myTimes={}; Object.keys(state.bookings).forEach(function(sid){ if(state.bookings[sid]){ var f=sessionById(sid); if(f) myTimes[f.s.time]=sid; } });
+  var rows=w.sessions.map(function(s){
+    var booked=!!state.bookings[s.id];
+    var full=s.free<=0 && !booked;
+    var conflict = !booked && !full && myTimes[s.time] && myTimes[s.time]!==s.id;
+    var right;
+    if(booked) right='<button class="mainbtn danger" style="padding:9px 12px;font-size:13px" data-act="waCancel" data-s="'+s.id+'">Отменить</button>';
+    else if(full) right='<button class="mainbtn" style="padding:9px 12px;font-size:13px" disabled>Мест нет</button>';
+    else if(conflict) right='<button class="mainbtn" style="padding:9px 12px;font-size:13px" data-act="waBook" data-s="'+s.id+'" data-conf="1" title="пересечение">Записаться</button>';
+    else right='<button class="mainbtn" style="padding:9px 12px;font-size:13px" data-act="waBook" data-s="'+s.id+'">Записаться</button>';
+    var chip = booked?'<span class="chip info">вы записаны</span>' : full?'<span class="chip no">мест нет</span>' : s.free<=3?'<span class="chip wait">мало мест: '+s.free+'</span>' : '<span class="chip ok">свободно: '+s.free+'</span>';
+    return '<div class="row" style="align-items:center"><div class="r-ico">⏰</div><div class="r-m"><div class="r-t">'+s.time+' <span class="muted" style="font-weight:500">· лимит '+s.limit+'</span></div><div class="r-s" style="margin-top:3px">'+chip+(conflict?' <span class="chip warn">пересечение</span>':"")+'</div></div><div class="r-r">'+right+'</div></div>';
+  }).join("");
+  return '<div class="wa-screen">'+
+    '<div class="card"><div class="t-t" style="font-size:15px">'+esc(w.n)+'</div><div class="t-s">'+esc(w.topic)+' · выбери время</div></div>'+
+    '<div class="sec-t">Сессии</div><div class="card">'+rows+'</div>'+
+    '<div class="note info" style="margin-top:12px"><span class="n-i">ℹ️</span><span>+15 баллов — за посещение (отметит менеджер), не за саму запись.</span></div>'+
+  '</div>';
+}
+
+function waProfile(){
+  return '<div class="wa-screen">'+
+    '<div class="qr-card">'+qrSVG(PARTICIPANT.id,172)+'<div><div class="id-lbl">ID участника</div><div class="id-big">'+PARTICIPANT.id+'</div></div>'+
+      '<div class="muted" style="font-size:12.5px;max-width:230px">Покажи менеджеру, чтобы получить баллы за активность или забрать мерч</div></div>'+
+    '<div class="sec-t">Мои данные</div>'+
+    '<div class="card"><div class="row"><div class="r-ico">👤</div><div class="r-m"><div class="r-t">'+esc(state.fio)+'</div><div class="r-s">'+esc(state.phone)+'</div></div></div>'+
+    '<div class="row"><div class="r-ico">✉️</div><div class="r-m"><div class="r-t">'+esc(state.email)+'</div><div class="r-s">'+(state.emailVerified?'<span class="chip ok">подтверждён</span>':'<span class="chip wait">не подтверждён</span>')+'</div></div><div class="r-r"><button class="bl-go" data-act="waTo" data-id="email">'+(state.emailVerified?"Сменить":"Подтвердить")+' ›</button></div></div></div>'+
+    '<div class="sec-t">Согласия</div>'+
+    '<div class="card"><div class="row"><div class="r-ico">🔒</div><div class="r-m"><div class="r-t">Обработка ПД</div></div><div class="r-r"><span class="chip ok">дано</span></div></div>'+
+    '<div class="row"><div class="r-ico">📣</div><div class="r-m"><div class="r-t">Рекламная рассылка ПСБ</div></div><div class="r-r"><span class="chip ok">дано</span></div></div></div>'+
+  '</div>';
+}
+
+/* реестр рендереров web app для навигации */
+R.waSoon=function(){ markNav("waSoon"); showSurfaceIfNeeded("webapp"); showWa("soon"); markNav("waSoon"); };
+R.waRegister=function(){ markNav("waRegister"); showWa("register"); markNav("waRegister"); };
+R.waRegErr=function(){ markNav("waRegErr"); showWa("register",{errors:{fio:false,email:"Похоже на опечатку в e-mail",phone:true},notes:"wa-register"}); markNav("waRegErr"); };
+R.waEmail=function(){ markNav("waEmail"); showWa("email"); markNav("waEmail"); };
+R.waHome=function(){ markNav("waHome"); showWa("home"); markNav("waHome"); };
+R.waAbout=function(){ markNav("waAbout"); showWa("about"); markNav("waAbout"); };
+R.waSchedule=function(){ markNav("waSchedule"); showWa("schedule"); markNav("waSchedule"); };
+R.waActivities=function(){ markNav("waActivities"); showWa("activities"); markNav("waActivities"); };
+R.waPoints=function(){ markNav("waPoints"); showWa("points"); markNav("waPoints"); };
+R.waShop=function(){ markNav("waShop"); showWa("shop"); markNav("waShop"); };
+R.waItemDemo=function(){ markNav("waItemDemo"); showWa("item",{item:"bottle"}); markNav("waItemDemo"); };
+R.waOrders=function(){ markNav("waOrders"); showWa("orders"); markNav("waOrders"); };
+R.waWorkshops=function(){ markNav("waWorkshops"); showWa("workshops"); markNav("waWorkshops"); };
+R.waSessDemo=function(){ markNav("waSessDemo"); showWa("sessions",{ws:"w2",notes:"wa-sessions"}); markNav("waSessDemo"); };
+R.waProfile=function(){ markNav("waProfile"); showWa("profile"); markNav("waProfile"); };
+function showSurfaceIfNeeded(s){ if($("#s-"+s).hidden){ /* switch tab visuals only */ $all(".surf-btn").forEach(function(b){b.classList.toggle("active",b.dataset.surface===s);}); ["botuser","botmgr","webapp"].forEach(function(x){$("#s-"+x).hidden=(x!==s);}); renderNav(s); $("#stageHint").textContent=HINTS[s]; } }
+
+/* =========================================================================
+   ДЕЙСТВИЯ (делегирование кликов)
+   ========================================================================= */
+var ACTIONS={
+  go:function(d){ if(R[d.r]) R[d.r](d); closeDrawers(); },
+  noop:function(){},
+
+  /* bot user */
+  consentDoc:function(d){ chatAdd("#chatUser", mIn("📄 <b>"+esc(d.doc)+"</b><br><a style='color:#2a7fff'>открыть документ →</a><br><i>Текст предоставляет ПСБ.</i>","10:24")); },
+  consentOk:function(){ chatAdd("#chatUser", mOut("✅ Соглашаюсь","10:25")); setTimeout(function(){ R.buOpen(); },220); },
+  openWebApp:function(){ showSurface("webapp"); },
+
+  /* bot manager */
+  mgrPickAct:function(d){ mgrCtx.mode="mark"; mgrCtx.actId=d.a; bmEnterScreen(); },
+  mgrKey:function(d){
+    var k=d.k;
+    if(k==="⌫") mgrCtx.entered=mgrCtx.entered.slice(0,-1);
+    else if(k==="OK"){ if(mgrCtx.entered.length>=5) mgrResolve(); else flash("#kpDisp"); return; }
+    else if(mgrCtx.entered.length<7) mgrCtx.entered+=k;
+    updKeypadDisplay();
+  },
+  mgrDemo:function(d){ mgrCtx.entered=d.v; updKeypadDisplay(); setTimeout(mgrResolve,150); },
+  mgrScan:function(){ mgrCtx.entered="482913"; updKeypadDisplay(); chatAdd("#chatMgr", mOut("📷 QR отсканирован","14:00")); setTimeout(mgrResolve,200); },
+  mgrConfirmMark:function(){
+    var a=actById(mgrCtx.actId); if(!a)return;
+    if(!state.marked[a.id]){ state.marked[a.id]={t:"14:01"}; state.earned.push({act:a.id,pts:a.pts,t:"14:01"}); }
+    R.bmOk();
+  },
+  mgrStats:function(){ chatAdd("#chatMgr", mIn("📊 За смену: отмечено <b>128</b> участников, выдано <b>34</b> позиции мерча.<br><i>Пример; данные из админки.</i>","14:30")); },
+  mgrIssueRes:function(d){ state.issued[d.item]=true; R.bmMerchOk(); },
+  mgrPayItem:function(d){
+    var m=merchById(d.item);
+    if(balance()<m.price){ R.bmMerchLow(); return; }
+    setNotes("bm-merch-ok");
+    chatSet("#chatMgr",
+      mOut("Оплата баллами: "+m.t,"14:23")+
+      mIn("Списать <b>"+m.price+" б.</b> и выдать «"+esc(m.t)+"»?<br>Баланс после: "+(balance()-m.price)+" б.","14:23")+
+      ik([{t:"Списать и выдать",act:"mgrPayConfirm",d:{item:d.item},cls:"webapp"},{t:"Отмена",act:"go",d:{r:"bmMerch"},cls:"ghost"}]));
+  },
+  mgrPayConfirm:function(d){ var m=merchById(d.item);
+    chatSet("#chatMgr", mIn("✅ <b>Выдано: "+esc(m.t)+"</b><br>Списано "+m.price+" б. · "+esc(PARTICIPANT.short)+" · 14:23","14:23")+
+      ik([{t:"🎁 Выдать ещё",act:"go",d:{r:"bmMerch"},cls:"webapp"},{t:"🧭 В меню",act:"go",d:{r:"bmMenu"},cls:"ghost"}]));
+    setNotes("bm-merch-ok");
+  },
+
+  /* web app nav */
+  waTab:function(d){ var id=d.id; R[{home:"waHome",activities:"waActivities",shop:"waShop",workshops:"waWorkshops",profile:"waProfile"}[id]](); },
+  waTo:function(d){ showWa(d.id); syncNavFromScreen(d.id); },
+  waBack:function(){ waBack(); },
+  waItemOpen:function(d){ showWa("item",{item:d.item}); markNav("waShop"); },
+  waSessOpen:function(d){ showWa("sessions",{ws:d.ws,notes:"wa-sessions"}); markNav("waWorkshops"); },
+
+  /* web app register */
+  regCheck:function(){},
+  regSubmit:function(){
+    var fio=($("#rFio")||{}).value||"", email=($("#rEmail")||{}).value||"", phone=($("#rPhone")||{}).value||"";
+    var errors={};
+    if(!fio.trim()) errors.fio=true;
+    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) errors.email=email.trim()?"Некорректный e-mail":"Укажите e-mail";
+    if(phone.replace(/\D/g,"").length<10) errors.phone=true;
+    if(Object.keys(errors).length){ showWa("register",{errors:errors,notes:"wa-register"}); markNav("waRegister"); return; }
+    state.registered=true; state.fio=fio; state.email=email; state.phone=phone;
+    if(!state.earned.some(function(x){return x.act==="reg";})) state.earned.unshift({act:"reg",pts:1,t:"11:02"});
+    showWa("home"); syncNavFromScreen("home");
+    toast("Анкета сохранена · +1 балл");
+  },
+
+  /* web app email */
+  emStart:function(){ showWa("email",{step:"sent",notes:"wa-email"}); markNav("waEmail"); },
+  emResend:function(){ toast("Код отправлен повторно"); },
+  emConfirm:function(){ state.emailVerified=true; showWa("email"); markNav("waEmail"); toast("E-mail подтверждён"); },
+
+  /* web app shop / orders */
+  waBuy:function(d){ var m=merchById(d.item);
+    if(balance()<m.price) return;
+    if(m.qty!==Infinity){ if(state.stock[m.id]<=0) return; state.stock[m.id]--; }
+    state.reservations.push({itemId:m.id,status:"reserved",t:"14:40"});
+    showWa("item",{item:m.id}); markNav("waShop");
+    toast("Оформлено: "+m.t+" · −"+m.price+" б.");
+  },
+
+  /* web app workshops */
+  waBook:function(d){
+    if(d.conf){ if(!confirmConflict()) return; }
+    var f=sessionById(d.s); if(!f||f.s.free<=0) return;
+    // снять другую бронь на то же время
+    Object.keys(state.bookings).forEach(function(sid){ if(state.bookings[sid]){ var g=sessionById(sid); if(g&&g.s.time===f.s.time&&sid!==d.s){ state.bookings[sid]=false; g.s.free++; } }});
+    state.bookings[d.s]=true; f.s.free--;
+    showWa("sessions",{ws:f.ws.id,notes:"wa-sessions"}); markNav("waWorkshops");
+    toast("Запись на "+f.s.time+" оформлена");
+  },
+  waCancel:function(d){ var f=sessionById(d.s); if(!f)return; if(state.bookings[d.s]){ state.bookings[d.s]=false; f.s.free++; }
+    showWa("sessions",{ws:f.ws.id,notes:"wa-sessions"}); markNav("waWorkshops"); toast("Запись отменена"); }
+};
+
+function syncNavFromScreen(id){
+  var map={home:"waHome",about:"waAbout",schedule:"waSchedule",activities:"waActivities",points:"waPoints",shop:"waShop",orders:"waOrders",workshops:"waWorkshops",profile:"waProfile",email:"waEmail",register:"waRegister",soon:"waSoon"};
+  if(map[id]) markNav(map[id]);
+}
+function confirmConflict(){ return window.confirm("На это время у тебя уже есть запись. Перезаписаться на новую сессию?"); }
+
+/* тост */
+function toast(t){
+  var el=document.createElement("div"); el.textContent=t;
+  el.style.cssText="position:fixed;left:50%;bottom:32px;transform:translateX(-50%);background:#14171c;color:#fff;padding:11px 18px;border-radius:12px;font-size:13px;font-weight:600;z-index:200;box-shadow:0 10px 30px rgba(0,0,0,.4);opacity:0;transition:.2s";
+  document.body.appendChild(el); requestAnimationFrame(function(){el.style.opacity="1";});
+  setTimeout(function(){ el.style.opacity="0"; setTimeout(function(){el.remove();},250); },1700);
+}
+function flash(sel){ var e=$(sel); if(!e)return; e.style.color="#f0483e"; setTimeout(function(){e.style.color="";},400); }
+
+/* =========================================================================
+   Верхняя панель, шторки, инициализация
+   ========================================================================= */
+function closeDrawers(){ var a=$("#app"); a.removeAttribute("data-nav"); }
+document.addEventListener("click", function(e){
+  var b=e.target.closest("[data-act]"); if(b){ var a=b.dataset.act; if(ACTIONS[a]){ ACTIONS[a](b.dataset,b); e.preventDefault(); } return; }
+  var s=e.target.closest("[data-surface]"); if(s){ showSurface(s.dataset.surface); return; }
+  var c=e.target.closest("[data-close]"); if(c){ var app=$("#app"); if(c.dataset.close==="nav") app.removeAttribute("data-nav"); else app.removeAttribute("data-notes"); return; }
+});
+
+function init(){
+  state=freshState();
+  showSurface("botuser");
+  renderNotes();
+
+  $("#notesToggle").addEventListener("click", function(){
+    var app=$("#app"); this.classList.toggle("on");
+    // на широких экранах прячем/показываем рельс; на узких — как шторку
+    if(window.matchMedia("(max-width:1180px)").matches){ app.toggleAttribute("data-notes"); }
+    else { $("#notesRail").style.display = this.classList.contains("on")?"":"none"; }
+  });
+  $("#navToggle").addEventListener("click", function(){ $("#app").toggleAttribute("data-nav"); });
+  $("#resetBtn").addEventListener("click", function(){ state=freshState(); var act=$(".surf-btn.active").dataset.surface; showSurface(act); toast("Прогресс сброшен"); });
+  $("#helpBtn").addEventListener("click", function(){ $("#overlay").hidden=false; });
+  $("#introStart").addEventListener("click", function(){ $("#overlay").hidden=true; });
+  $("#scrim").addEventListener("click", closeDrawers);
+  $("#waBack").addEventListener("click", function(){ waBack(); });
+
+  // часы
+  function clock(){ var d=new Date(); $("#clock").textContent=(""+d.getHours()).padStart(2,"0")+":"+(""+d.getMinutes()).padStart(2,"0"); }
+  clock(); setInterval(clock,15000);
+}
+init();
+</script>
+
+</body>
+</html>

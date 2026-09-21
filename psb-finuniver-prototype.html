@@ -236,15 +236,10 @@ button{font-family:inherit;cursor:pointer}
 .tl-desc{font-size:12px;color:var(--scr-muted);margin-top:2px}
 
 /* map */
-.map{position:relative;background:linear-gradient(135deg,#eef1f5,#e3e8ee);border:1px solid var(--scr-line);border-radius:16px;height:210px;overflow:hidden;margin-bottom:6px}
-.map .floor{position:absolute;font-size:10px;color:var(--scr-muted-2);font-weight:700;text-transform:uppercase;letter-spacing:.5px}
-.pin-pt{position:absolute;transform:translate(-50%,-100%);display:flex;flex-direction:column;align-items:center;gap:2px}
-.pin-pt .pin-d{width:26px;height:26px;border-radius:50% 50% 50% 2px;transform:rotate(45deg);display:grid;place-items:center;box-shadow:0 3px 8px rgba(0,0,0,.25);font-size:0}
-.pin-pt .pin-d i{transform:rotate(-45deg);font-size:12px;font-style:normal}
-.pin-pt .pin-l{font-size:9px;font-weight:700;background:#fff;padding:1px 5px;border-radius:6px;color:var(--scr-txt);white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.15)}
-.pin-d.done{background:var(--ok)}
-.pin-d.todo{background:var(--accent)}
-.pin-d.gold{background:var(--gold)}
+.map{position:relative;background:linear-gradient(135deg,#eef1f5,#e3e8ee);border:1px solid var(--scr-line);border-radius:16px;height:210px;overflow:hidden;margin-bottom:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:var(--scr-muted-2);text-align:center}
+.map .map-ico{font-size:34px}
+.map .map-t{font-size:12.5px;font-weight:700;color:var(--scr-txt)}
+.map .map-s{font-size:11px}
 
 /* shop */
 .shop-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
@@ -656,19 +651,37 @@ var NOTES = {
 
 /* ----- Бот участника ----- */
 "bu-start":{ ico:"🚀", title:"/start · точка входа",
-  purpose:"Единственный вход в систему. QR со стикеров по вузу и пост в паблике ВК ведут на deeplink <code>t.me/bot?start=src</code>. Факт входа = регистрация пользователя в системе.",
-  logic:["Параметр deeplink (<code>start=stolovaya</code>, <code>vk</code>, <code>lift</code>…) сохраняем как <b>источник</b> — пригодится в аналитике охвата.","Определяем <b>роль</b> по Telegram ID: участник / менеджер / тестер / админ. Незнакомый ID = участник.","Первое сообщение: короткий рассказ о боте + кнопка перехода к согласию. Ничего лишнего — цель довести до Web App."],
-  states:[S("Новый","первый /start → рассказ + запрос согласия","var(--info)"),S("Повторный","/start после согласия → сразу меню с кнопкой Web App","var(--ok)")],
+  purpose:"Единственный вход в систему. QR со стикеров по вузу и пост в паблике ВК ведут на deeplink <code>t.me/bot?start=src</code>. Факт входа = регистрация пользователя в системе — пуш-воронка стартует сразу, даже если анкету ниже он не заполнит.",
+  logic:["Параметр deeplink (<code>start=stolovaya</code>, <code>vk</code>, <code>lift</code>…) сохраняем как <b>источник</b> — пригодится в аналитике охвата.","Определяем <b>роль</b> по Telegram ID: участник / менеджер / тестер / админ. Незнакомый ID = участник.","Первое сообщение: короткий рассказ о боте + кнопка перехода к анкете (фамилия/имя → телефон → e-mail → согласие). Ничего лишнего — цель довести до Web App."],
+  states:[S("Новый","первый /start → рассказ + переход к анкете","var(--info)"),S("Повторный","/start после согласия → сразу меню с кнопкой Web App","var(--ok)")],
   open:[] },
 
-"bu-consent":{ ico:"🔒", title:"Первичное согласие",
-  purpose:"В боте берём только первичное согласие на обработку ПД и принятие правил — этого достаточно, чтобы открыть Web App. Детальные галочки (реклама/рекрутинг) — уже в форме Web App.",
-  logic:["Кнопки: <b>Соглашаюсь</b> · <b>Политика ПД</b> · <b>Правила</b>. До согласия Web App не открываем.","Тексты согласий и правил даёт ПСБ — подставляем ссылки/файлы, не сочиняем.","Фиксируем факт согласия: <code>user_id</code>, версия текста, дата/время (юридический след)."],
+"bu-name":{ ico:"📝", title:"Анкета · фамилия и имя",
+  purpose:"Первый шаг сбора контактных данных прямо в боте — чтобы не ждать запуска Web App. Анкета необязательна для входа: пользователь может её не проходить, пуши всё равно продолжат приходить (см. открытые вопросы).",
+  logic:["Бот спрашивает фамилию и имя одним сообщением, пользователь отвечает свободным текстом.","Значение сохраняем как <code>fio</code> — далее оно же используется в Web App и карточке участника у менеджера.","Повторно не спрашиваем: если ФИО уже есть (заполнено в боте или в Web App), сразу пропускаем шаг."],
+  states:[S("Запрос","ждём ответ пользователя","var(--info)"),S("Получено","ФИО сохранено → следующий шаг: телефон","var(--ok)")],
+  open:[] },
+
+"bu-phone":{ ico:"📱", title:"Анкета · номер телефона",
+  purpose:"Второй шаг анкеты. Основной путь — кнопка «Отправить номер телефона» (нативный Telegram-запрос контакта), а не ручной ввод: так номер гарантированно совпадает с аккаунтом и не требует верификации.",
+  logic:["Reply-кнопка с <code>request_contact:true</code> — пользователь жмёт и подтверждает, бот получает номер, привязанный к его Telegram.","Полученный номер сохраняем как <code>phone</code>.","Верифицированный номер не нужен отдельно проверять — сам факт «поделился контактом» уже подтверждение."],
+  states:[S("Запрос","кнопка «Отправить номер» активна","var(--info)"),S("Получено","номер сохранён → следующий шаг: e-mail","var(--ok)")],
+  open:[] },
+
+"bu-email":{ ico:"✉️", title:"Анкета · e-mail",
+  purpose:"Третий, последний шаг сбора данных. E-mail — ключевой контакт под рекрутинговую рассылку ПСБ.",
+  logic:["Бот просит ввести e-mail текстом, пользователь отвечает.","Базовая валидация формата на стороне бота; при явной ошибке — переспрашиваем.","После e-mail сразу переходим к согласию — форма не запрашивается пошагово где-то ещё раз."],
+  states:[S("Запрос","ждём ввод e-mail","var(--info)"),S("Получено","e-mail сохранён → переход к согласию","var(--ok)")],
+  open:["Нужна ли отдельная верификация e-mail (код/ссылка) в боте, или это только в Web App (см. wa-email) — на усмотрение ПСБ."] },
+
+"bu-consent":{ ico:"🔒", title:"Согласие с правилами",
+  purpose:"Финальный шаг анкеты: только после того, как пользователь указал фамилию/имя, телефон и e-mail, показываем согласие на обработку ПД и правила участия — и лишь затем открываем меню/Web App.",
+  logic:["Кнопки: <b>Соглашаюсь</b> · <b>Политика ПД</b> · <b>Правила</b>. До согласия меню с кнопкой Web App не показываем.","Тексты согласий и правил даёт ПСБ — подставляем ссылки/файлы, не сочиняем.","Фиксируем факт согласия: <code>user_id</code>, версия текста, дата/время (юридический след).","Анкета в целом необязательна: если пользователь прервал заполнение на любом шаге (имя/телефон/e-mail/согласие) и не вернулся, воронка пушей по программе дня продолжает работать — блокируется только доступ к Web App и начислению баллов, а не рассылка."],
   states:[S("Ожидание","кнопки активны, Web App скрыт","var(--warn)"),S("Дано","записали согласие → открываем меню","var(--ok)")],
   open:["Итоговый состав согласий: 2 или 3 (ПД / рекламная рассылка / отдельное на рекрутинг, если ПСБ не считает его рекламой) — ждём тексты от ПСБ."] },
 
 "bu-open":{ ico:"✅", title:"Меню · открыт Web App",
-  purpose:"После согласия — постоянное reply-меню и большая кнопка запуска Web App (тип web_app). Одна авторизация: в Web App пользователь приходит уже опознанным через initData бота.",
+  purpose:"После анкеты (фамилия/имя → телефон → e-mail) и согласия — постоянное reply-меню и большая кнопка запуска Web App (тип web_app). Одна авторизация: в Web App пользователь приходит уже опознанным через initData бота.",
   logic:["Reply-клавиатура закреплена: <b>Открыть приложение</b> · <b>Мой QR/ID</b> · <b>Помощь</b>.","Кнопка Web App — <code>web_app</code> с URL апки; прогресс и данные сохраняются между заходами.","Ролевой гейт: обычному участнику до запуска Web App показывает экран «скоро»; тестерам/менеджерам/админам — рабочую версию."],
   states:[S("Гейт закрыт","участник видит «скоро» внутри апки","var(--warn)"),S("Гейт открыт","апка доступна всем","var(--ok)")],
   open:[] },
@@ -756,9 +769,9 @@ var NOTES = {
   states:[S("Закрыто","участник видит «скоро»","var(--warn)"),S("Открыто","апка доступна","var(--ok)")],
   open:[] },
 
-"wa-register":{ ico:"📝", title:"Регистрация · единая форма",
-  purpose:"Сбор ПД и согласий — на одном экране (не пошагово, как в боте). Пока данные не заполнены — форма показывается сразу и блокирует остальные разделы.",
-  logic:["Поля: <b>ФИО, e-mail, телефон</b> + галочки согласий. Всё на одном экране.","За заполнение — <b>стартовые баллы</b> (+1 по ТЗ). Это мотивация: данные необязательны для входа, но нужны для трат в магазине.","E-mail: свой SMTP. Хранить с флагом «подтверждён»; предусмотреть смену e-mail при ошибке ввода.","Данные приходят предзаполненными из Telegram, где можно (имя)."],
+"wa-register":{ ico:"📝", title:"Регистрация · единая форма (запасной путь)",
+  purpose:"Резервный экран для тех, кто НЕ прошёл пошаговую анкету в боте (пропустил шаг, зашёл в Web App напрямую, либо стартовал бота уже после её отключения). В боте те же данные собираются по шагам — фамилия/имя → телефон → e-mail → согласие (см. bu-name/bu-phone/bu-email/bu-consent); здесь то же самое — одним экраном. Пока данные не заполнены — форма показывается сразу и блокирует остальные разделы.",
+  logic:["Поля: <b>ФИО, e-mail, телефон</b> + галочки согласий. Всё на одном экране.","За заполнение — <b>стартовые баллы</b> (+1 по ТЗ), те же, что и за анкету в боте — не начисляем дважды.","E-mail: свой SMTP. Хранить с флагом «подтверждён»; предусмотреть смену e-mail при ошибке ввода.","Данные приходят предзаполненными, если пользователь уже что-то оставил в боте — донабираем только недостающее."],
   states:[S("Пусто","форма ждёт ввода, разделы заблокированы","var(--warn)"),S("Ошибки","подсветка невалидных полей","var(--bad)"),S("Сохранено","+стартовые баллы, разделы открыты","var(--ok)")],
   open:["Обязательны ли данные для участия — на согласовании с ПСБ (клиент переживает за явку).","Состав согласий 2/3 — по текстам ПСБ."] },
 
@@ -786,10 +799,10 @@ var NOTES = {
   open:["Детальное расписание дня — ждём от ПСБ/клиента."] },
 
 "wa-activities":{ ico:"🗺", title:"Карта активностей",
-  purpose:"Где что проходит и сколько баллов даёт. Статус точки: пройдено / доступно.",
-  logic:["Точки с баллами из ТЗ. Отметку ставит <b>менеджер</b> (скан/ID) — не сам участник.","Кофе/фото/караоке — точки <b>траты</b> баллов, не заработка.","«Пройдено» подтягивается из транзакций начисления."],
+  purpose:"Где что проходит и сколько баллов даёт. Сама карта — <b>статичное изображение</b> от ПСБ (не интерактивная схема с кликабельными точками); список точек и их статус — под картой, обычными карточками.",
+  logic:["Картинка карты — просто вставленное изображение (img/SVG-плейсхолдер), без координат и кликов по точкам.","Точки с баллами из ТЗ выводим списком под картой. Отметку ставит <b>менеджер</b> (скан/ID) — не сам участник, не клик по карте.","Кофе/фото/караоке — точки <b>траты</b> баллов, не заработка.","«Пройдено» подтягивается из транзакций начисления."],
   states:[S("Доступно","точка не пройдена","var(--info)"),S("Пройдено","баллы начислены","var(--ok)"),S("Множитель","золотой час x2 (опц.)","var(--gold)")],
-  open:["«Золотой час» — под вопросом на v1."] },
+  open:["Финальное изображение карты — ждём от ПСБ/клиента; сейчас плейсхолдер.","«Золотой час» — под вопросом на v1, склоняемся отказаться (нелинейно из-за лимита мест на МК)."] },
 
 "wa-points":{ ico:"⭐", title:"Баллы и прогресс",
   purpose:"Баланс, история начислений/трат, прогресс до следующей награды. Геймификация = мотивация проходить точки.",
@@ -860,6 +873,9 @@ function renderNotes(){
 var NAV = {
   botuser:[
     {r:"buStart",  ico:"🚀", label:"/start · вход"},
+    {r:"buName",   ico:"📝", label:"Фамилия и имя"},
+    {r:"buPhone",  ico:"📱", label:"Номер телефона"},
+    {r:"buEmail",  ico:"✉️", label:"Почта"},
     {r:"buConsent",ico:"🔒", label:"Согласие ПД / правила"},
     {r:"buOpen",   ico:"✅", label:"Меню · открыт Web App"},
     {r:"buId",     ico:"🆔", label:"Персональный ID / QR"},
@@ -948,31 +964,69 @@ var REPLY_KB_USER='<div class="rk"><button class="rk-btn wide" data-act="go" dat
 
 var R = {}; // реестр рендереров (для nav и кнопок)
 
+var PLAIN_FIELD='<div class="tg-field"><input placeholder="Сообщение" readonly><span class="snd"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 20l18-8L3 4v6l12 2-12 2z"/></svg></span></div>';
+
 R.buStart=function(){
   markNav("buStart"); setNotes("bu-start");
   chatSet("#chatUser",
     day("6 октября")+
     svc("Вы перешли по QR-коду со стикера · источник: <b>stolovaya</b>")+
     mOut("/start","10:24")+
-    mIn("👋 Привет! Это бот карьерного дня <b>ПСБ × Финуниверситет</b>.<br><br>Здесь ты копишь <b>баллы</b> за активности и меняешь их на мерч, записываешься на мастер-классы и получаешь свой персональный QR.<br><br>Чтобы продолжить, подтверди согласие 👇","10:24")+
-    ik([{t:"Продолжить →",act:"go",d:{r:"buConsent"},cls:"webapp"}])
+    mIn("👋 Привет! Это бот карьерного дня <b>ПСБ × Финуниверситет</b>.<br><br>Здесь ты копишь <b>баллы</b> за активности и меняешь их на мерч, записываешься на мастер-классы и получаешь свой персональный QR.<br><br>Для начала — короткая анкета из трёх вопросов 👇","10:24")+
+    ik([{t:"Продолжить →",act:"go",d:{r:"buName"},cls:"webapp"}])
   );
-  $("#inputUser").innerHTML='<div class="tg-field"><input placeholder="Сообщение" readonly><span class="snd"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 20l18-8L3 4v6l12 2-12 2z"/></svg></span></div>';
+  $("#inputUser").innerHTML=PLAIN_FIELD;
+};
+
+R.buName=function(){
+  markNav("buName"); setNotes("bu-name");
+  chatSet("#chatUser",
+    day("6 октября")+
+    mOut("/start","10:24")+
+    mIn("Как тебя зовут? Напиши фамилию и имя одним сообщением 👇","10:24")+
+    ik([{t:"✍️ "+esc(state.fio),sub:"демо ввода",act:"nameOk",cls:"webapp"}])
+  );
+  $("#inputUser").innerHTML=PLAIN_FIELD;
+};
+
+R.buPhone=function(){
+  markNav("buPhone"); setNotes("bu-phone");
+  chatSet("#chatUser",
+    day("6 октября")+
+    mOut(state.fio,"10:24")+
+    mIn("Отлично! Теперь укажи номер телефона — проще всего просто поделиться тем, что привязан к Telegram 👇","10:24")
+  );
+  $("#inputUser").innerHTML=
+    '<div class="rk one"><button class="rk-btn wide" data-act="sharePhone">📱 Отправить номер телефона</button></div>'+PLAIN_FIELD;
+};
+
+R.buEmail=function(){
+  markNav("buEmail"); setNotes("bu-email");
+  chatSet("#chatUser",
+    day("6 октября")+
+    mOut(state.fio,"10:24")+
+    mOut("📱 "+state.phone,"10:25")+
+    mIn("Принято. Последний шаг — укажи e-mail: пригодится, чтобы прислать приглашение и вакансии от HR ПСБ 👇","10:25")+
+    ik([{t:"✍️ "+esc(state.email),sub:"демо ввода",act:"emailOk",cls:"webapp"}])
+  );
+  $("#inputUser").innerHTML=PLAIN_FIELD;
 };
 
 R.buConsent=function(){
   markNav("buConsent"); setNotes("bu-consent");
   chatSet("#chatUser",
     day("6 октября")+
-    mOut("/start","10:24")+
-    mIn("Перед стартом нужно согласие на обработку персональных данных и принятие правил.<br><br><i>Тексты — от ПСБ.</i>","10:24")+
+    mOut(state.fio,"10:24")+
+    mOut("📱 "+state.phone,"10:25")+
+    mOut(state.email,"10:25")+
+    mIn("Спасибо! Осталось согласие на обработку персональных данных и принятие правил участия.<br><br><i>Тексты — от ПСБ.</i>","10:26")+
     ik([
       {t:"✅ Соглашаюсь",act:"consentOk",cls:"webapp"},
       {t:"📄 Политика ПД",act:"consentDoc",d:{doc:"Политика обработки ПД"},cls:"ghost"},
       {t:"📄 Правила",act:"consentDoc",d:{doc:"Правила участия"},cls:"ghost"}
     ])
   );
-  $("#inputUser").innerHTML='<div class="tg-field"><input placeholder="Сообщение" readonly><span class="snd"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 20l18-8L3 4v6l12 2-12 2z"/></svg></span></div>';
+  $("#inputUser").innerHTML=PLAIN_FIELD;
 };
 
 R.buOpen=function(){
@@ -1337,16 +1391,12 @@ function waActivities(){
   var spend='<div class="row"><div class="r-ico">☕</div><div class="r-m"><div class="r-t">Кофе · Фотобудка · Караоке</div><div class="r-s">точки трат баллов на фестивале</div></div><div class="r-r"><div class="pts dim">−2…5</div></div></div>';
   return '<div class="wa-screen">'+
     '<div class="map">'+
-      '<div class="floor" style="left:10px;top:8px">1 этаж · холлы</div>'+
-      pin(24,55,"done","🏛","Пленарка")+pin(58,38,"todo","🎓","МК")+pin(80,62,"todo","💼","HR")+pin(42,78,"gold","⚡","Фест")+pin(15,88,"todo","🚪","Вход")+pin(70,86,"todo","☕","Кофе")+
+      '<div class="map-ico">🗺</div><div class="map-t">Карта активностей</div><div class="map-s">статичное изображение от ПСБ · не интерактивно</div>'+
     '</div>'+
     '<div class="note info"><span class="n-i">🧭</span><span>Отметку на точке ставит <b>менеджер</b> по твоему QR/ID. Сам себя отметить нельзя.</span></div>'+
     '<div class="sec-t">Заработать баллы</div><div class="card">'+rows+'</div>'+
     '<div class="sec-t">Потратить баллы</div><div class="card">'+spend+'</div>'+
   '</div>';
-}
-function pin(x,y,cls,emo,label){
-  return '<div class="pin-pt" style="left:'+x+'%;top:'+y+'%"><div class="pin-d '+cls+'"><i>'+emo+'</i></div><div class="pin-l">'+label+'</div></div>';
 }
 
 function waPoints(){
@@ -1504,8 +1554,11 @@ var ACTIONS={
   noop:function(){},
 
   /* bot user */
+  nameOk:function(){ setTimeout(function(){ R.buPhone(); },220); },
+  sharePhone:function(){ chatAdd("#chatUser", mOut("📱 "+state.phone,"10:25")); setTimeout(function(){ R.buEmail(); },220); },
+  emailOk:function(){ setTimeout(function(){ R.buConsent(); },220); },
   consentDoc:function(d){ chatAdd("#chatUser", mIn("📄 <b>"+esc(d.doc)+"</b><br><a style='color:#2a7fff'>открыть документ →</a><br><i>Текст предоставляет ПСБ.</i>","10:24")); },
-  consentOk:function(){ chatAdd("#chatUser", mOut("✅ Соглашаюсь","10:25")); setTimeout(function(){ R.buOpen(); },220); },
+  consentOk:function(){ chatAdd("#chatUser", mOut("✅ Соглашаюсь","10:26")); setTimeout(function(){ R.buOpen(); },220); },
   openWebApp:function(){ showSurface("webapp"); },
 
   /* bot manager */

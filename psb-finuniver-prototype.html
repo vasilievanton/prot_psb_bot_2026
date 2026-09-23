@@ -771,14 +771,9 @@ var NOTES = {
 
 "wa-home":{ ico:"🏠", title:"Главная",
   purpose:"Хаб апки: КВ бренда с названием/временем/местом и коротким описанием, баланс, запись на пленарку, быстрый доступ ко всем разделам.",
-  logic:["Сверху — КВ (ключевой визуал) от ПСБ; сейчас плейсхолдер. В КВ уже есть всё, что нужно знать о мероприятии в двух строках: название, дата/время/место, короткое описание.","Баланс баллов + переход в историю.","<b>Запись на пленарную сессию</b> — карточка сразу на главном экране (не спрятана внутри «Мастер-классов»). Функционал такой же, как запись на мастер-класс (кнопка «Записаться» → чип «вы записаны» → можно отменить), но <b>без лимита мест</b> — записаться может каждый.","Запись на пленарку — это отдельная сущность от начисления баллов за неё: баллы даёт скан QR на месте (см. bu-start/wm-act), запись сюда не влияет и не требуется для получения баллов. Это скорее сигнал намерения прийти/напоминание, а не пропуск.","Плитки: расписание, карта активностей, магазин, мастер-классы, о мероприятии, мой QR."],
+  logic:["Сверху — КВ (ключевой визуал) от ПСБ; сейчас плейсхолдер. В КВ уже есть всё, что нужно знать о мероприятии в двух строках: название, дата/время/место, короткое описание.","Баланс баллов + переход в историю.","<b>Запись на пленарную сессию</b> — карточка сразу на главном экране (не спрятана внутри «Мастер-классов»). Функционал такой же, как запись на мастер-класс (кнопка «Записаться» → чип «вы записаны» → можно отменить), но <b>без лимита мест</b> — записаться может каждый.","Запись на пленарку — это отдельная сущность от начисления баллов за неё: баллы даёт скан QR на месте (см. bu-start/wm-act), запись сюда не влияет и не требуется для получения баллов. Это скорее сигнал намерения прийти/напоминание, а не пропуск.","Плитки: расписание, карта активностей, магазин, мастер-классы, мой QR. Отдельного экрана «О мероприятии» нет — убрали: вся эта информация уже в КВ-блоке выше, отдельная страница только дублировала её."],
   states:[S("Рабочая","данные заполнены, всё открыто","var(--ok)"),S("Не записан","кнопка «Записаться» на пленарку","var(--info)"),S("Записан","чип «вы записаны», кнопка «Отменить»","var(--ok)")],
   open:["Дизайн-код (цвета, лого, КВ) — ждём от клиента; сейчас плейсхолдер в цветах ПСБ."] },
-
-"wa-about":{ ico:"📄", title:"О мероприятии",
-  purpose:"То же название/время/место/описание, что уже есть в шапке Главной (см. wa-home) — отдельной содержательной информации сверх этого нет, писать особо нечего.",
-  logic:["Контент — фактически дубль КВ-блока Главной, отдельной страницей. Статично, редактируется в коде/админке.","6 октября, Финуниверситет, 11:00–17:00."],
-  states:[S("Статично","инфо-блок","var(--muted-2)")], open:[] },
 
 "wa-schedule":{ ico:"🗓", title:"Расписание",
   purpose:"Тайминг дня. Помогает удержать людей до конца (одна из главных целей).",
@@ -875,7 +870,6 @@ var NAV = {
     {r:"waRegister", ico:"📝", label:"Регистрация"},
     {r:"waRegErr",   ico:"❗", label:"Ошибки формы", edge:true},
     {r:"waHome",     ico:"🏠", label:"Главная", grp:"Основное"},
-    {r:"waAbout",    ico:"📄", label:"О мероприятии"},
     {r:"waSchedule", ico:"🗓", label:"Расписание"},
     {r:"waActivities",ico:"🗺",label:"Карта активностей"},
     {r:"waPoints",   ico:"⭐", label:"Баллы и прогресс"},
@@ -1245,7 +1239,7 @@ var WA_TABS=[
   {id:"workshops", label:"МК", ico:'<path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1 3 3 6 3s6-2 6-3v-5"/>'},
   {id:"profile", label:"Профиль", ico:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>'}
 ];
-var TAB_OF={home:"home",about:"home",schedule:"home",points:"home",activities:"activities",shop:"shop",item:"shop",orders:"shop",workshops:"workshops",sessions:"workshops",profile:"profile"};
+var TAB_OF={home:"home",schedule:"home",points:"home",activities:"activities",shop:"shop",item:"shop",orders:"shop",workshops:"workshops",sessions:"workshops",profile:"profile"};
 function renderTabbar(active){
   $("#waTabbar").innerHTML=WA_TABS.map(function(t){
     return '<button class="tab'+(t.id===active?" active":"")+'" data-act="waTab" data-id="'+t.id+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">'+t.ico+'</svg>'+t.label+'</button>';
@@ -1258,7 +1252,7 @@ function showWa(id, opts){
   var body=$("#waBody"); body.innerHTML = waScreenHTML(id, opts);
   body.scrollTop=0;
   // header
-  var titles={home:"ПСБ · Финунивер",soon:"ПСБ · Финунивер",register:"Регистрация",about:"О мероприятии",schedule:"Расписание",activities:"Карта активностей",points:"Баллы и прогресс",shop:"Магазин мерча",item:(opts.item?merchById(opts.item).t:"Товар"),orders:"Мои заказы",workshops:"Мастер-классы",sessions:(opts.ws?wsById(opts.ws).n:"Сессии"),profile:"Профиль"};
+  var titles={home:"ПСБ · Финунивер",soon:"ПСБ · Финунивер",register:"Регистрация",schedule:"Расписание",activities:"Карта активностей",points:"Баллы и прогресс",shop:"Магазин мерча",item:(opts.item?merchById(opts.item).t:"Товар"),orders:"Мои заказы",workshops:"Мастер-классы",sessions:(opts.ws?wsById(opts.ws).n:"Сессии"),profile:"Профиль"};
   $("#waTitle").textContent=titles[id]||"ПСБ · Финунивер";
   var topLevel=["home","soon","register","activities","shop","workshops","profile"];
   var back=$("#waBack"); back.classList.toggle("show", topLevel.indexOf(id)<0);
@@ -1280,7 +1274,6 @@ function waScreenHTML(id,opts){
   if(id==="soon") return waSoon();
   if(id==="register") return waRegister(opts.errors);
   if(id==="home") return waHome();
-  if(id==="about") return waAbout();
   if(id==="schedule") return waSchedule();
   if(id==="activities") return waActivities();
   if(id==="points") return waPoints();
@@ -1346,20 +1339,12 @@ function waHome(){
       tile("activities","🗺","Карта активностей","точки и баллы","#fff1e8")+
       tile("shop","🛍","Магазин мерча","обменять баллы","#fff6d6")+
       tile("workshops","🎓","Мастер-классы","запись на сессии","#eafaf0")+
-      tile("about","📄","О мероприятии","детали и спикеры","#f2f0ff")+
       tile("profile","🆔","Мой QR / ID","для начисления","#eaf0ff")+
     '</div>'+
   '</div>';
 }
 function tile(id,ico,t,s,bg){
   return '<button class="tile" data-act="waTo" data-id="'+id+'"><div class="t-ico" style="background:'+bg+'">'+ico+'</div><div class="t-t">'+t+'</div><div class="t-s">'+s+'</div></button>';
-}
-
-function waAbout(){
-  return '<div class="wa-screen">'+
-    '<div class="card"><div class="wa-lead"><b>Карьерный день ПСБ</b><br>Финансовый университет · 6 октября · 11:00–17:00<br><br>Знакомство с банком, вакансиями и стажировками — плюс баллы, мерч и мастер-классы.</div></div>'+
-    '<div class="note warn" style="margin-top:12px"><span class="n-i">✏️</span><span>То же название/время/место/описание уже есть в шапке Главной — этот экран дублирует их отдельной страницей. Текст — плейсхолдер, финальный от ПСБ.</span></div>'+
-  '</div>';
 }
 
 function waSchedule(){
@@ -1536,7 +1521,6 @@ R.waSoon=function(){ markNav("waSoon"); showSurfaceIfNeeded("webapp"); showWa("s
 R.waRegister=function(){ markNav("waRegister"); showWa("register"); markNav("waRegister"); };
 R.waRegErr=function(){ markNav("waRegErr"); showWa("register",{errors:{fio:false,email:"Похоже на опечатку в e-mail",phone:true},notes:"wa-register"}); markNav("waRegErr"); };
 R.waHome=function(){ markNav("waHome"); showWa("home"); markNav("waHome"); };
-R.waAbout=function(){ markNav("waAbout"); showWa("about"); markNav("waAbout"); };
 R.waSchedule=function(){ markNav("waSchedule"); showWa("schedule"); markNav("waSchedule"); };
 R.waActivities=function(){ markNav("waActivities"); showWa("activities"); markNav("waActivities"); };
 R.waPoints=function(){ markNav("waPoints"); showWa("points"); markNav("waPoints"); };
@@ -1634,7 +1618,7 @@ var ACTIONS={
 };
 
 function syncNavFromScreen(id){
-  var map={home:"waHome",about:"waAbout",schedule:"waSchedule",activities:"waActivities",points:"waPoints",shop:"waShop",orders:"waOrders",workshops:"waWorkshops",profile:"waProfile",register:"waRegister",soon:"waSoon"};
+  var map={home:"waHome",schedule:"waSchedule",activities:"waActivities",points:"waPoints",shop:"waShop",orders:"waOrders",workshops:"waWorkshops",profile:"waProfile",register:"waRegister",soon:"waSoon"};
   if(map[id]) markNav(map[id]);
 }
 function confirmConflict(){ return window.confirm("На это время у тебя уже есть запись. Перезаписаться на новую сессию?"); }

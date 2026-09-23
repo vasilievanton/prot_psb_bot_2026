@@ -605,6 +605,7 @@ function freshState(){
     ],
     reservations:[],        // {itemId, status:'reserved'|'issued', t}
     bookings:{ w1s1:true }, // sessionId -> true
+    plenaryBooked:false,    // запись на пленарку — без лимита мест, отдельно от начисления баллов
     stock:(function(){ var o={}; MERCH.forEach(function(m){o[m.id]=m.qty;}); o.shop=0; return o; })(), // Шоппер = закончился (демо)
     marked:{},              // manager: `${actId}` -> {t} для участника 482913
     issued:{}               // manager: reservationKey -> true
@@ -769,9 +770,9 @@ var NOTES = {
   open:["Обязательны ли данные для участия — на согласовании с ПСБ (клиент переживает за явку)."] },
 
 "wa-home":{ ico:"🏠", title:"Главная",
-  purpose:"Хаб апки: КВ бренда с названием/временем/местом и коротким описанием, баланс, быстрый доступ ко всем разделам, «что сейчас».",
-  logic:["Сверху — КВ (ключевой визуал) от ПСБ; сейчас плейсхолдер. В КВ уже есть всё, что нужно знать о мероприятии в двух строках: название, дата/время/место, короткое описание.","Баланс баллов + переход в историю.","Плитки: расписание, карта активностей, магазин, мастер-классы, о мероприятии, мой QR."],
-  states:[S("Рабочая","данные заполнены, всё открыто","var(--ok)")],
+  purpose:"Хаб апки: КВ бренда с названием/временем/местом и коротким описанием, баланс, запись на пленарку, быстрый доступ ко всем разделам.",
+  logic:["Сверху — КВ (ключевой визуал) от ПСБ; сейчас плейсхолдер. В КВ уже есть всё, что нужно знать о мероприятии в двух строках: название, дата/время/место, короткое описание.","Баланс баллов + переход в историю.","<b>Запись на пленарную сессию</b> — карточка сразу на главном экране (не спрятана внутри «Мастер-классов»). Функционал такой же, как запись на мастер-класс (кнопка «Записаться» → чип «вы записаны» → можно отменить), но <b>без лимита мест</b> — записаться может каждый.","Запись на пленарку — это отдельная сущность от начисления баллов за неё: баллы даёт скан QR на месте (см. bu-start/wm-act), запись сюда не влияет и не требуется для получения баллов. Это скорее сигнал намерения прийти/напоминание, а не пропуск.","Плитки: расписание, карта активностей, магазин, мастер-классы, о мероприятии, мой QR."],
+  states:[S("Рабочая","данные заполнены, всё открыто","var(--ok)"),S("Не записан","кнопка «Записаться» на пленарку","var(--info)"),S("Записан","чип «вы записаны», кнопка «Отменить»","var(--ok)")],
   open:["Дизайн-код (цвета, лого, КВ) — ждём от клиента; сейчас плейсхолдер в цветах ПСБ."] },
 
 "wa-about":{ ico:"📄", title:"О мероприятии",
@@ -1322,11 +1323,23 @@ function waRegister(errors){
   '</div>';
 }
 
+function plenaryCard(){
+  var booked=state.plenaryBooked;
+  return '<div class="card" style="margin-top:12px">'+
+    '<div class="row" style="border:0;padding:2px 0 0"><div class="r-ico">🏛</div><div class="r-m"><div class="r-t">Пленарная сессия</div><div class="r-s">11:00–14:00 · мест не ограничено, записаться могут все</div></div><div class="r-r">'+
+      (booked
+        ? '<button class="mainbtn danger" style="padding:9px 12px;font-size:13px" data-act="plenaryCancel">Отменить</button>'
+        : '<button class="mainbtn" style="padding:9px 12px;font-size:13px" data-act="plenaryBook">Записаться</button>')+
+    '</div></div>'+
+    (booked?'<div style="margin-top:8px"><span class="chip info">вы записаны</span></div>':'')+
+  '</div>';
+}
 function waHome(){
   var bal=balance();
   return '<div class="wa-screen">'+
     '<div class="kv"><span class="kv-badge">Ключевой визуал ПСБ</span><div class="kv-t">Карьерный день ПСБ</div><div class="kv-s">Финуниверситет · 6 октября · 11:00–17:00</div><div class="kv-desc">Знакомство с банком, вакансиями и стажировками — баллы, мерч и мастер-классы.</div><span class="kv-ph">здесь будет КВ от клиента</span></div>'+
     '<div class="balance"><div class="coin">Б</div><div class="bl"><div class="bl-n">'+bal+'</div><div class="bl-l">баллов на балансе</div></div><button class="bl-go" data-act="waTo" data-id="points">История →</button></div>'+
+    plenaryCard()+
     '<div class="note info" style="margin-top:14px"><span class="n-i">⏱</span><span><b>Сейчас идёт:</b> пленарная сессия (до 14:00). Дальше — активности и мастер-классы.</span></div>'+
     '<div class="tiles">'+
       tile("schedule","🗓","Расписание","программа дня","#eef4ff")+
@@ -1592,6 +1605,10 @@ var ACTIONS={
   },
 
   /* web app email */
+
+  /* пленарка — запись без лимита мест, прямо на главной */
+  plenaryBook:function(){ state.plenaryBooked=true; showWa("home"); markNav("waHome"); toast("Запись на пленарку оформлена"); },
+  plenaryCancel:function(){ state.plenaryBooked=false; showWa("home"); markNav("waHome"); toast("Запись отменена"); },
 
   /* web app shop / orders */
   waBuy:function(d){ var m=merchById(d.item);

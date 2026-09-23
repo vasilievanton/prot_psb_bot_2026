@@ -299,10 +299,6 @@ button{font-family:inherit;cursor:pointer}
 .soon .s-emo{font-size:52px}
 .soon h2{font-size:22px;font-weight:800;color:var(--scr-txt);margin:8px 0 0}
 .soon p{color:var(--scr-muted);font-size:13.5px;max-width:260px}
-.soon .s-count{display:flex;gap:8px;margin-top:14px}
-.soon .s-count div{background:var(--scr);border:1px solid var(--scr-line);border-radius:12px;padding:9px 12px;min-width:52px}
-.soon .s-count b{display:block;font-size:22px;font-weight:800;color:var(--accent);font-family:var(--mono)}
-.soon .s-count span{font-size:10px;color:var(--scr-muted);text-transform:uppercase;letter-spacing:.4px}
 
 /* QR */
 .qr-card{background:var(--scr);border:1px solid var(--scr-line);border-radius:18px;padding:20px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px}
@@ -340,8 +336,7 @@ button{font-family:inherit;cursor:pointer}
 #s-webapp .merch, #s-webappmgr .merch,
 #s-webapp .qr-card, #s-webappmgr .qr-card,
 #s-webapp .consent, #s-webappmgr .consent,
-#s-webapp .inp, #s-webappmgr .inp,
-#s-webapp .soon .s-count div, #s-webappmgr .soon .s-count div{
+#s-webapp .inp, #s-webappmgr .inp{
   backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
   box-shadow:0 10px 26px rgba(31,42,110,.10);
 }
@@ -378,8 +373,6 @@ button{font-family:inherit;cursor:pointer}
 
 #s-webapp .soon h2, #s-webappmgr .soon h2{color:#fff}
 #s-webapp .soon p, #s-webappmgr .soon p{color:rgba(255,255,255,.88)}
-#s-webapp .soon .s-count b, #s-webappmgr .soon .s-count b{color:var(--kv-navy)}
-#s-webapp .soon .s-count span, #s-webappmgr .soon .s-count span{color:rgba(31,42,110,.6)}
 
 /* ============ DEV NOTES RAIL ============ */
 .note-block{margin-bottom:16px}
@@ -839,7 +832,7 @@ var NOTES = {
 /* ----- Web App участника ----- */
 "wa-soon":{ ico:"⏳", title:"Экран «Скоро» (ролевой гейт)",
   purpose:"Web App публикуем на проде заранее, но обычным участникам до запуска показываем «скоро». Тестеры/менеджеры/админы уже видят рабочую версию — так экономим на отдельной тестовой среде.",
-  logic:["Гейт — по роли + флагу запуска. Переключается из админки без передеплоя.","Пока закрыто: превью даты/программы, таймер обратного отсчёта. Кнопку «напомнить о запуске» не делаем — лишний функционал, который никто не обсуждал и не заказывал.","Открыли флаг → всем сразу доступна рабочая апка."],
+  logic:["Гейт — по роли + флагу запуска. Переключается из админки без передеплоя.","Пока закрыто: просто сообщение «скоро откроется» с ожидаемой датой. Без обратного отсчёта (дни/часы/минуты) и без кнопки «напомнить о запуске» — лишний функционал, который никто не обсуждал и не заказывал.","Открыли флаг → всем сразу доступна рабочая апка."],
   states:[S("Закрыто","участник видит «скоро»","var(--warn)"),S("Открыто","апка доступна","var(--ok)")],
   open:[] },
 
@@ -1373,7 +1366,6 @@ function waSoon(){
     '<div class="s-emo">⏳</div>'+
     '<h2>Скоро открытие</h2>'+
     '<p>Приложение карьерного дня ПСБ появится здесь совсем скоро. Загляни ближе к 6 октября!</p>'+
-    '<div class="s-count"><div><b>14</b><span>дней</span></div><div><b>06</b><span>часов</span></div><div><b>12</b><span>минут</span></div></div>'+
     '<div style="font-size:11px;color:var(--scr-muted-2);margin-top:18px">Тестеры, менеджеры и админы уже видят рабочую версию</div>'+
   '</div>';
 }

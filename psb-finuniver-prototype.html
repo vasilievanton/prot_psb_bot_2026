@@ -29,6 +29,9 @@
   --sans:"Golos Text",-apple-system,"Segoe UI",Roboto,sans-serif;
   --mono:"JetBrains Mono",ui-monospace,"SF Mono",Consolas,monospace;
   color-scheme:dark;
+  /* KV brand — "Всё начинается с ПСБ": sky-to-dawn gradient, used only inside the Web App skin below */
+  --kv-blue:#3E6BF2; --kv-blue-light:#6C8DF6; --kv-lavender:#B7B6F2; --kv-peach:#F9C6B3;
+  --kv-coral:#F2787E; --kv-coral-600:#ea5f68; --kv-glow:#FFD9B0; --kv-navy:#1F2A6E;
 }
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -185,7 +188,7 @@ button{font-family:inherit;cursor:pointer}
 .balance .bl{flex:1}
 .balance .bl .bl-n{font-size:26px;font-weight:800;color:var(--scr-txt);font-variant-numeric:tabular-nums;line-height:1}
 .balance .bl .bl-l{font-size:12px;color:var(--scr-muted);margin-top:2px}
-.balance .bl-go{color:var(--accent);font-size:12.5px;font-weight:700;display:flex;align-items:center;gap:3px}
+.balance .bl-go{background:none;border:0;padding:0;color:var(--accent);font-size:12.5px;font-weight:700;display:flex;align-items:center;gap:3px}
 
 .tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
 .tile{background:var(--scr);border:1px solid var(--scr-line);border-radius:14px;padding:13px 13px 14px;text-align:left;display:flex;flex-direction:column;gap:8px;transition:.12s}
@@ -310,6 +313,73 @@ button{font-family:inherit;cursor:pointer}
 /* generic small button row */
 .btn-row{display:flex;gap:9px;margin-top:14px}
 .btn-row>*{flex:1}
+
+/* ============ KV BRAND SKIN — "Всё начинается с ПСБ" (Web App only, both roles) ============
+   Bot chat stays native Telegram look; this only applies inside the Web App surfaces. */
+.screen-wrap.kv-skin{
+  background:linear-gradient(180deg,var(--kv-blue) 0%,var(--kv-blue-light) 26%,var(--kv-lavender) 58%,var(--kv-peach) 100%);
+}
+.screen-wrap.kv-skin>.statusbar{background:transparent;color:#fff}
+
+#s-webapp, #s-webappmgr{
+  --scr:rgba(255,255,255,.6); --scr-2:rgba(255,255,255,.38); --scr-3:rgba(255,255,255,.5);
+  --scr-line:rgba(255,255,255,.55);
+  --scr-txt:var(--kv-navy); --scr-muted:rgba(31,42,110,.64); --scr-muted-2:rgba(31,42,110,.42);
+  --accent:var(--kv-coral); --accent-600:var(--kv-coral-600); --accent-tint:rgba(242,120,126,.16);
+  --shadow-sm:0 10px 26px rgba(31,42,110,.14);
+}
+#s-webapp .wa-header, #s-webappmgr .wa-header{background:transparent;border-bottom:0}
+#s-webapp .wa-h-t, #s-webappmgr .wa-h-t{color:#fff;font-weight:800;text-shadow:0 1px 8px rgba(31,42,110,.3)}
+#s-webapp .wa-back, #s-webappmgr .wa-back{color:#fff}
+#s-webapp .wa-h-x, #s-webappmgr .wa-h-x{background:rgba(255,255,255,.28);color:#fff}
+#s-webapp .wa-body, #s-webappmgr .wa-body{background:transparent}
+
+#s-webapp .card, #s-webappmgr .card,
+#s-webapp .tile, #s-webappmgr .tile,
+#s-webapp .balance, #s-webappmgr .balance,
+#s-webapp .merch, #s-webappmgr .merch,
+#s-webapp .qr-card, #s-webappmgr .qr-card,
+#s-webapp .consent, #s-webappmgr .consent,
+#s-webapp .inp, #s-webappmgr .inp,
+#s-webapp .soon .s-count div, #s-webappmgr .soon .s-count div{
+  backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
+  box-shadow:0 10px 26px rgba(31,42,110,.10);
+}
+#s-webapp .row, #s-webappmgr .row{border-bottom-color:rgba(31,42,110,.12)}
+#s-webapp .row .r-ico, #s-webappmgr .row .r-ico{background:rgba(255,255,255,.55)}
+#s-webapp .tile:hover, #s-webappmgr .tile:hover{border-color:rgba(255,255,255,.8)}
+
+#s-webapp .wa-tabbar, #s-webappmgr .wa-tabbar{background:rgba(255,255,255,.55);border-top:1px solid rgba(255,255,255,.6);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px)}
+#s-webapp .tab, #s-webappmgr .tab{color:rgba(31,42,110,.48)}
+#s-webapp .tab.active, #s-webappmgr .tab.active{color:var(--kv-navy)}
+
+#s-webapp .sec-t, #s-webappmgr .sec-t{display:inline-flex;align-items:center;background:rgba(255,255,255,.4);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:5px 12px;border-radius:999px;color:var(--kv-navy);font-weight:800}
+#s-webapp .sec-t .st-r, #s-webappmgr .sec-t .st-r{color:var(--kv-coral)}
+
+#s-webapp .kv, #s-webappmgr .kv{background:linear-gradient(135deg,var(--kv-blue),var(--kv-lavender) 130%)}
+#s-webapp .kv::after, #s-webappmgr .kv::after{background:radial-gradient(circle,var(--kv-glow),transparent 70%)}
+
+#s-webapp .mainbtn, #s-webappmgr .mainbtn{box-shadow:0 10px 22px rgba(242,120,126,.42)}
+#s-webapp .mainbtn.sec, #s-webappmgr .mainbtn.sec{color:var(--kv-navy);border-color:rgba(31,42,110,.3)}
+#s-webapp .mainbtn.sec:hover, #s-webappmgr .mainbtn.sec:hover{background:rgba(255,255,255,.7)}
+#s-webapp .mainbtn.ghost, #s-webappmgr .mainbtn.ghost{color:var(--kv-navy)}
+#s-webapp .mainbtn.danger, #s-webappmgr .mainbtn.danger{color:#b23328;border-color:rgba(178,51,40,.35)}
+
+#s-webapp .field label, #s-webappmgr .field label{color:var(--kv-navy);text-shadow:0 1px 2px rgba(255,255,255,.4)}
+
+#s-webapp .note, #s-webappmgr .note{backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+#s-webapp .note.blk, #s-webappmgr .note.blk{background:rgba(249,198,179,.45);border-color:rgba(249,198,179,.75);color:#7a3d22}
+#s-webapp .note.info, #s-webappmgr .note.info{background:rgba(183,182,242,.38);border-color:rgba(183,182,242,.6);color:var(--kv-navy)}
+#s-webapp .note.ok, #s-webappmgr .note.ok{background:rgba(60,190,140,.2);border-color:rgba(60,190,140,.4);color:#0e6b46}
+#s-webapp .note.warn, #s-webappmgr .note.warn{background:rgba(255,217,176,.5);border-color:rgba(255,217,176,.8);color:#8a5410}
+#s-webapp .note.bad, #s-webappmgr .note.bad{background:rgba(242,120,126,.2);border-color:rgba(242,120,126,.42);color:#a8333b}
+
+#s-webapp .map, #s-webappmgr .map{background:linear-gradient(135deg,rgba(183,182,242,.45),rgba(249,198,179,.55))}
+
+#s-webapp .soon h2, #s-webappmgr .soon h2{color:#fff}
+#s-webapp .soon p, #s-webappmgr .soon p{color:rgba(255,255,255,.88)}
+#s-webapp .soon .s-count b, #s-webappmgr .soon .s-count b{color:var(--kv-navy)}
+#s-webapp .soon .s-count span, #s-webappmgr .soon .s-count span{color:rgba(31,42,110,.6)}
 
 /* ============ DEV NOTES RAIL ============ */
 .note-block{margin-bottom:16px}
@@ -915,9 +985,11 @@ var HINTS={
   webapp:"Web App — вкладки снизу, кнопки внутри живые",
   webappmgr:"Web App менеджера — та же апка, роль менеджера: введи ID или выбери сценарий"
 };
+function applySkin(name){ $(".screen-wrap").classList.toggle("kv-skin", name==="webapp"||name==="webappmgr"); }
 function showSurface(name){
   $all(".surf-btn").forEach(function(b){ b.classList.toggle("active", b.dataset.surface===name); });
   ["botuser","webapp","webappmgr"].forEach(function(s){ $("#s-"+s).hidden = (s!==name); });
+  applySkin(name);
   renderNav(name); $("#stageHint").textContent=HINTS[name];
   if(name==="botuser") R.buStart();
   else if(name==="webappmgr") R.wmMenu();
@@ -1529,7 +1601,7 @@ R.waOrders=function(){ markNav("waOrders"); showWa("orders"); markNav("waOrders"
 R.waWorkshops=function(){ markNav("waWorkshops"); showWa("workshops"); markNav("waWorkshops"); };
 R.waSessDemo=function(){ markNav("waSessDemo"); showWa("sessions",{ws:"w2",notes:"wa-sessions"}); markNav("waSessDemo"); };
 R.waProfile=function(){ markNav("waProfile"); showWa("profile"); markNav("waProfile"); };
-function showSurfaceIfNeeded(s){ if($("#s-"+s).hidden){ /* switch tab visuals only */ $all(".surf-btn").forEach(function(b){b.classList.toggle("active",b.dataset.surface===s);}); ["botuser","webapp","webappmgr"].forEach(function(x){$("#s-"+x).hidden=(x!==s);}); renderNav(s); $("#stageHint").textContent=HINTS[s]; } }
+function showSurfaceIfNeeded(s){ if($("#s-"+s).hidden){ /* switch tab visuals only */ $all(".surf-btn").forEach(function(b){b.classList.toggle("active",b.dataset.surface===s);}); ["botuser","webapp","webappmgr"].forEach(function(x){$("#s-"+x).hidden=(x!==s);}); applySkin(s); renderNav(s); $("#stageHint").textContent=HINTS[s]; } }
 
 /* =========================================================================
    ДЕЙСТВИЯ (делегирование кликов)

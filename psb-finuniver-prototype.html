@@ -602,8 +602,10 @@ button{font-family:inherit;cursor:pointer}
 var PARTICIPANT = { id:"482913", fio:"Иван Соколов", short:"Иван С." };
 
 var ACTS = [
-  /* Порядок = хронология дня: рега → вход → пленарка → мастер-класс → HR → фестиваль */
-  { id:"reg",     t:"Заполнение анкеты / регистрация", ico:"📝", pts:1 },
+  /* Порядок = хронология дня: рега → анкета → вход → пленарка → мастер-класс → HR → фестиваль */
+  /* formFill: баллы начисляются автоматически при сохранении формы в Web App — не менеджер, не скан */
+  { id:"reg",    t:"Регистрация", ico:"📝", pts:1, formFill:true },
+  { id:"survey", t:"Заполнение анкеты", ico:"🏫", pts:null, formFill:true }, // доп. вопросы: факультет/курс/уровень образования/группа — баллы уточняются у ПСБ
   /* selfScan: баллы даёт скан QR с экрана/ссылки на бота (deeplink-параметр), без участия менеджера */
   { id:"enter",   t:"Вход на мероприятие", ico:"🚪", pts:null, selfScan:true }, // баллы финализируются с ПСБ
   { id:"plenary", t:"Пленарная сессия", ico:"🏛", pts:25, selfScan:true },
@@ -679,6 +681,7 @@ function freshState(){
     reservations:[],        // {itemId, status:'reserved'|'issued', t}
     bookings:{ w1s1:true }, // sessionId -> true
     plenaryBooked:false,    // запись на пленарку — без лимита мест, отдельно от начисления баллов
+    survey:{faculty:"",course:"",level:"",group:""}, // доп. анкета — отдельно от базовой регистрации
     stock:(function(){ var o={}; MERCH.forEach(function(m){o[m.id]=m.qty;}); o.shop=0; return o; })(), // Шоппер = закончился (демо)
     marked:{},              // manager: `${actId}` -> {t} для участника 482913
     issued:{}               // manager: reservationKey -> true
@@ -842,6 +845,12 @@ var NOTES = {
   states:[S("Пусто","форма ждёт ввода, разделы заблокированы","var(--warn)"),S("Ошибки","подсветка невалидных полей","var(--bad)"),S("Сохранено","+стартовые баллы, разделы открыты","var(--ok)")],
   open:["Обязательны ли данные для участия — на согласовании с ПСБ (клиент переживает за явку)."] },
 
+"wa-survey":{ ico:"🏫", title:"Анкета студента",
+  purpose:"Отдельная активность от базовой регистрации (см. ACTS: <code>reg</code> vs <code>survey</code>) — доп. вопросы про учёбу, чтобы точнее подбирать вакансии/стажировки: факультет, курс, уровень образования, учебная группа. Необязательна, можно заполнить в любой момент из Профиля.",
+  logic:["4 поля: <b>Факультет</b> (текст), <b>Курс</b> (текст/число), <b>Уровень образования</b> (выпадающий список: Бакалавриат / Специалитет / Магистратура), <b>Учебная группа</b> (текст).","Не блокирует остальные разделы приложения — в отличие от базовой регистрации, тут можно просто не заходить.","При сохранении пишем факт в <code>state.earned</code> как активность <code>survey</code> — попадает в общую историю и на карту активностей."],
+  states:[S("Не заполнено","карточка в Профиле предлагает «Заполнить»","var(--warn)"),S("Заполнено","данные показаны, есть «Изменить»","var(--ok)")],
+  open:["Баллы за анкету — ПСБ ещё не назвал число; сейчас начисляем 0 как заглушку, поменять на реальное значение в <code>ACTS.survey.pts</code> и в начислении."] },
+
 "wa-home":{ ico:"🏠", title:"Главная",
   purpose:"Хаб апки: КВ бренда с названием/временем/местом и коротким описанием, баланс, запись на пленарку, быстрый доступ ко всем разделам.",
   logic:["Сверху — КВ (ключевой визуал) от ПСБ; сейчас плейсхолдер. В КВ уже есть всё, что нужно знать о мероприятии в двух строках: название, дата/время/место, короткое описание.","Баланс баллов + переход в историю.","<b>Запись на пленарную сессию</b> — карточка сразу на главном экране (не спрятана внутри «Мастер-классов»). Функционал такой же, как запись на мастер-класс (кнопка «Записаться» → чип «вы записаны» → можно отменить), но <b>без лимита мест</b> — записаться может каждый.","Запись на пленарку — это отдельная сущность от начисления баллов за неё: баллы даёт скан QR на месте (см. bu-start/wm-act), запись сюда не влияет и не требуется для получения баллов. Это скорее сигнал намерения прийти/напоминание, а не пропуск.","Плитки: расписание, карта активностей, магазин, мастер-классы, мой QR. Отдельного экрана «О мероприятии» нет — убрали: вся эта информация уже в КВ-блоке выше, отдельная страница только дублировала её."],
@@ -897,8 +906,8 @@ var NOTES = {
   open:[] },
 
 "wa-profile":{ ico:"🆔", title:"Профиль · QR / ID",
-  purpose:"Персональный QR и 5–7-значный ID для начисления и выдачи. Плюс статус данных и согласий.",
-  logic:["QR/ID совпадают с ботом — один участник.","E-mail показываем как есть, без статуса подтверждения — верификацию не делаем.","Подпись: покажи менеджеру для начисления баллов и выдачи мерча."],
+  purpose:"Персональный QR и 5–7-значный ID для начисления и выдачи. Плюс статус данных, анкеты студента и согласий.",
+  logic:["QR/ID совпадают с ботом — один участник.","E-mail показываем как есть, без статуса подтверждения — верификацию не делаем.","Блок «Анкета студента» (см. wa-survey) — карточка «Заполнить» / «Изменить», отдельно от блока «Мои данные» (базовая регистрация).","Подпись: покажи менеджеру для начисления баллов и выдачи мерча."],
   states:[S("Готово","QR + ID + статусы","var(--ok)")],
   open:[] }
 };
@@ -951,7 +960,8 @@ var NAV = {
     {r:"waOrders",   ico:"📦", label:"Мои заказы"},
     {r:"waWorkshops",ico:"🎓", label:"Мастер-классы"},
     {r:"waSessDemo", ico:"⏰", label:"Выбор сессии"},
-    {r:"waProfile",  ico:"🆔", label:"Профиль · QR/ID", grp:"Профиль"}
+    {r:"waProfile",  ico:"🆔", label:"Профиль · QR/ID", grp:"Профиль"},
+    {r:"waSurveyDemo",ico:"🏫", label:"Анкета студента"}
   ],
   webappmgr:[
     {r:"wmMenu",     ico:"🧭", label:"Меню менеджера"},
@@ -1161,7 +1171,7 @@ function wmMenu(){
 }
 
 function wmAct(){
-  var earnActs=ACTS.filter(function(a){return a.id!=="reg"&&a.pts>=0&&!a.selfScan;});
+  var earnActs=ACTS.filter(function(a){return !a.formFill&&a.pts>=0&&!a.selfScan;});
   var spendActs=ACTS.filter(function(a){return a.pts<0;});
   var earnRows=earnActs.map(function(a){
     return '<button class="row" style="width:100%;text-align:left;border:0;background:transparent;cursor:pointer" data-act="wmPickAct" data-a="'+a.id+'"><div class="r-ico">'+a.ico+'</div><div class="r-m"><div class="r-t">'+esc(a.t)+'</div></div><div class="r-r"><div class="pts">'+ptsLabel(a)+'</div></div></button>';
@@ -1170,7 +1180,7 @@ function wmAct(){
     return '<button class="row" style="width:100%;text-align:left;border:0;background:transparent;cursor:pointer" data-act="wmPickAct" data-a="'+a.id+'"><div class="r-ico">'+a.ico+'</div><div class="r-m"><div class="r-t">'+esc(a.t)+'</div><div class="r-s">без лимита</div></div><div class="r-r"><div class="pts dim">'+ptsLabel(a)+'</div></div></button>';
   }).join("");
   return '<div class="wa-screen">'+
-    '<div class="note info"><span class="n-i">📍</span><span>Пленарку, мастер-классы и вход участник получает сам — сканирует QR с экрана/на входе. Здесь только точки, которые обслуживает менеджер.</span></div>'+
+    '<div class="note info"><span class="n-i">📍</span><span>Пленарку, мастер-классы и вход участник получает сам — сканирует QR с экрана/на входе. Регистрацию и анкету засчитывает форма в приложении. Здесь только точки, которые обслуживает менеджер.</span></div>'+
     '<div class="sec-t">Начисление</div><div class="card">'+earnRows+'</div>'+
     '<div class="sec-t">Списание (без лимита)</div><div class="card">'+spendRows+'</div>'+
   '</div>';
@@ -1314,7 +1324,7 @@ var WA_TABS=[
   {id:"workshops", label:"МК", ico:'<path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1 3 3 6 3s6-2 6-3v-5"/>'},
   {id:"profile", label:"Профиль", ico:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>'}
 ];
-var TAB_OF={home:"home",schedule:"home",points:"home",activities:"activities",shop:"shop",item:"shop",orders:"shop",workshops:"workshops",sessions:"workshops",profile:"profile"};
+var TAB_OF={home:"home",schedule:"home",points:"home",activities:"activities",shop:"shop",item:"shop",orders:"shop",workshops:"workshops",sessions:"workshops",profile:"profile",survey:"profile"};
 function renderTabbar(active){
   $("#waTabbar").innerHTML=WA_TABS.map(function(t){
     return '<button class="tab'+(t.id===active?" active":"")+'" data-act="waTab" data-id="'+t.id+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">'+t.ico+'</svg>'+t.label+'</button>';
@@ -1327,7 +1337,7 @@ function showWa(id, opts){
   var body=$("#waBody"); body.innerHTML = waScreenHTML(id, opts);
   body.scrollTop=0;
   // header
-  var titles={home:"ПСБ · Финунивер",soon:"ПСБ · Финунивер",register:"Регистрация",schedule:"Расписание",activities:"Карта активностей",points:"Баллы и прогресс",shop:"Магазин мерча",item:(opts.item?merchById(opts.item).t:"Товар"),orders:"Мои заказы",workshops:"Мастер-классы",sessions:(opts.ws?wsById(opts.ws).n:"Сессии"),profile:"Профиль"};
+  var titles={home:"ПСБ · Финунивер",soon:"ПСБ · Финунивер",register:"Регистрация",survey:"Анкета студента",schedule:"Расписание",activities:"Карта активностей",points:"Баллы и прогресс",shop:"Магазин мерча",item:(opts.item?merchById(opts.item).t:"Товар"),orders:"Мои заказы",workshops:"Мастер-классы",sessions:(opts.ws?wsById(opts.ws).n:"Сессии"),profile:"Профиль"};
   $("#waTitle").textContent=titles[id]||"ПСБ · Финунивер";
   var topLevel=["home","soon","register","activities","shop","workshops","profile"];
   var back=$("#waBack"); back.classList.toggle("show", topLevel.indexOf(id)<0);
@@ -1348,6 +1358,7 @@ function waBack(){ waStack.pop(); var prev=waStack.pop(); if(prev) showWa(prev.i
 function waScreenHTML(id,opts){
   if(id==="soon") return waSoon();
   if(id==="register") return waRegister(opts.errors);
+  if(id==="survey") return waSurveyForm(opts.errors);
   if(id==="home") return waHome();
   if(id==="schedule") return waSchedule();
   if(id==="activities") return waActivities();
@@ -1378,7 +1389,7 @@ function consentRows(checked){
 function waRegister(errors){
   var e=errors||{};
   return '<div class="wa-screen">'+
-    '<div class="note blk"><span class="n-i">🔒</span><span>Заполни анкету, чтобы копить и тратить баллы. За заполнение — <b>стартовые баллы</b>. Остальные разделы пока заблокированы.</span></div>'+
+    '<div class="note blk"><span class="n-i">🔒</span><span>Заполни данные, чтобы копить и тратить баллы. За регистрацию — <b>стартовые баллы</b>. Остальные разделы пока заблокированы.</span></div>'+
     '<div class="field"><label>ФИО <span class="req">*</span></label><input class="inp'+(e.fio?" err":"")+'" id="rFio" value="'+esc(state.fio)+'" placeholder="Иванов Иван Иванович"><div class="err-msg'+(e.fio?" show":"")+'">⚠ Укажите ФИО</div></div>'+
     '<div class="field"><label>E-mail <span class="req">*</span></label><input class="inp'+(e.email?" err":"")+'" id="rEmail" value="" placeholder="you@example.ru" inputmode="email"><div class="err-msg'+(e.email?" show":"")+'">⚠ '+(e.email||"Некорректный e-mail")+'</div></div>'+
     '<div class="field"><label>Телефон <span class="req">*</span></label><input class="inp'+(e.phone?" err":"")+'" id="rPhone" value="" placeholder="+7 (___) ___-__-__" inputmode="tel"><div class="err-msg'+(e.phone?" show":"")+'">⚠ Укажите телефон</div></div>'+
@@ -1387,6 +1398,21 @@ function waRegister(errors){
     '<div style="height:12px"></div>'+
     '<button class="mainbtn" data-act="regSubmit">Сохранить и продолжить</button>'+
     '<div style="font-size:11px;color:var(--scr-muted);text-align:center;margin-top:10px">Данные защищены. Обязательность полей — на согласовании с ПСБ.</div>'+
+  '</div>';
+}
+
+var SURVEY_LEVELS=["Бакалавриат","Специалитет","Магистратура"];
+function waSurveyForm(errors){
+  var e=errors||{}; var s=state.survey||{};
+  var levelOpts='<option value="" disabled'+(s.level?"":" selected")+'>Выбери уровень</option>'+
+    SURVEY_LEVELS.map(function(l){ return '<option value="'+l+'"'+(s.level===l?" selected":"")+'>'+l+'</option>'; }).join("");
+  return '<div class="wa-screen">'+
+    '<div class="note blk"><span class="n-i">🏫</span><span>Расскажи о себе — так проще подобрать релевантные вакансии и стажировки. Отдельно от регистрации, можно заполнить позже.</span></div>'+
+    '<div class="field"><label>Факультет <span class="req">*</span></label><input class="inp'+(e.faculty?" err":"")+'" id="svFaculty" value="'+esc(s.faculty||"")+'" placeholder="Например, Кредитно-экономический"><div class="err-msg'+(e.faculty?" show":"")+'">⚠ Укажи факультет</div></div>'+
+    '<div class="field"><label>Курс <span class="req">*</span></label><input class="inp'+(e.course?" err":"")+'" id="svCourse" value="'+esc(s.course||"")+'" placeholder="Например, 3" inputmode="numeric"><div class="err-msg'+(e.course?" show":"")+'">⚠ Укажи курс</div></div>'+
+    '<div class="field"><label>Уровень образования <span class="req">*</span></label><select class="inp'+(e.level?" err":"")+'" id="svLevel">'+levelOpts+'</select><div class="err-msg'+(e.level?" show":"")+'">⚠ Выбери уровень образования</div></div>'+
+    '<div class="field"><label>Учебная группа <span class="req">*</span></label><input class="inp'+(e.group?" err":"")+'" id="svGroup" value="'+esc(s.group||"")+'" placeholder="Например, Ф1-1"><div class="err-msg'+(e.group?" show":"")+'">⚠ Укажи учебную группу</div></div>'+
+    '<button class="mainbtn" data-act="surveySubmit">Сохранить</button>'+
   '</div>';
 }
 
@@ -1440,13 +1466,13 @@ function tlItem(time,title,desc,plen){
 }
 
 function waActivities(){
-  var done={plenary:true,reg:true,mk:true};
+  var earnedSet={}; state.earned.forEach(function(x){ earnedSet[x.act]=true; });
   var earnActs=ACTS.filter(function(a){return a.pts==null||a.pts>=0;});
   var spendActs=ACTS.filter(function(a){return a.pts<0;});
   var rows=earnActs.map(function(a){
-    var isDone=done[a.id];
-    var chip = a.pts==null ? '<span class="chip gray">баллы уточн.</span>' : (isDone?'<span class="chip ok">пройдено</span>':'<span class="chip info">доступно</span>');
-    var desc = isDone ? "баллы начислены" : (a.selfScan ? "сканируй QR с экрана / на входе" : "отметит менеджер по QR/ID");
+    var isDone=earnedSet[a.id];
+    var chip = isDone ? '<span class="chip ok">пройдено</span>' : (a.pts==null?'<span class="chip gray">баллы уточн.</span>':'<span class="chip info">доступно</span>');
+    var desc = isDone ? "баллы начислены" : (a.formFill ? "заполни форму в приложении" : (a.selfScan ? "сканируй QR с экрана / на входе" : "отметит менеджер по QR/ID"));
     return '<div class="row"><div class="r-ico">'+a.ico+'</div><div class="r-m"><div class="r-t">'+esc(a.t)+'</div><div class="r-s">'+desc+'</div></div><div class="r-r"><div class="pts'+(a.pts==null?" dim":"")+'">'+ptsLabel(a)+'</div>'+chip+'</div></div>';
   }).join("");
   var spendRows=spendActs.map(function(a){
@@ -1579,12 +1605,19 @@ function waSessions(wsId){
 }
 
 function waProfile(){
+  var sv=state.survey||{}; var surveyDone=!!sv.faculty;
   return '<div class="wa-screen">'+
     '<div class="qr-card">'+qrSVG(PARTICIPANT.id,172)+'<div><div class="id-lbl">ID участника</div><div class="id-big">'+PARTICIPANT.id+'</div></div>'+
       '<div class="muted" style="font-size:12.5px;max-width:230px">Покажи менеджеру, чтобы получить баллы за активность или забрать мерч</div></div>'+
     '<div class="sec-t">Мои данные</div>'+
     '<div class="card"><div class="row"><div class="r-ico">👤</div><div class="r-m"><div class="r-t">'+esc(state.fio)+'</div><div class="r-s">'+esc(state.phone)+'</div></div></div>'+
     '<div class="row"><div class="r-ico">✉️</div><div class="r-m"><div class="r-t">'+esc(state.email)+'</div></div></div></div>'+
+    '<div class="sec-t">Анкета студента</div>'+
+    '<div class="card">'+
+      (surveyDone
+        ? '<div class="row"><div class="r-ico">🏫</div><div class="r-m"><div class="r-t">'+esc(sv.faculty)+'</div><div class="r-s">Курс '+esc(sv.course)+' · '+esc(sv.level)+' · группа '+esc(sv.group)+'</div></div><div class="r-r"><button class="bl-go" data-act="waTo" data-id="survey">Изменить ›</button></div></div>'
+        : '<div class="row"><div class="r-ico">🏫</div><div class="r-m"><div class="r-t">Факультет, курс, уровень, группа</div><div class="r-s">ещё не заполнено</div></div><div class="r-r"><button class="bl-go" data-act="waTo" data-id="survey">Заполнить ›</button></div></div>')+
+    '</div>'+
     '<div class="sec-t">Согласия</div>'+
     '<div class="card"><div class="row"><div class="r-ico">🔒</div><div class="r-m"><div class="r-t">Обработка ПД</div></div><div class="r-r"><span class="chip ok">дано</span></div></div>'+
     '<div class="row"><div class="r-ico">📣</div><div class="r-m"><div class="r-t">Рекламная рассылка ПСБ</div></div><div class="r-r"><span class="chip ok">дано</span></div></div></div>'+
@@ -1605,6 +1638,7 @@ R.waOrders=function(){ markNav("waOrders"); showWa("orders"); markNav("waOrders"
 R.waWorkshops=function(){ markNav("waWorkshops"); showWa("workshops"); markNav("waWorkshops"); };
 R.waSessDemo=function(){ markNav("waSessDemo"); showWa("sessions",{ws:"w2",notes:"wa-sessions"}); markNav("waSessDemo"); };
 R.waProfile=function(){ markNav("waProfile"); showWa("profile"); markNav("waProfile"); };
+R.waSurveyDemo=function(){ markNav("waSurveyDemo"); showWa("survey"); markNav("waSurveyDemo"); };
 function showSurfaceIfNeeded(s){ if($("#s-"+s).hidden){ /* switch tab visuals only */ $all(".surf-btn").forEach(function(b){b.classList.toggle("active",b.dataset.surface===s);}); ["botuser","webapp","webappmgr"].forEach(function(x){$("#s-"+x).hidden=(x!==s);}); applySkin(s); renderNav(s); $("#stageHint").textContent=HINTS[s]; } }
 
 /* =========================================================================
@@ -1660,7 +1694,21 @@ var ACTIONS={
     state.registered=true; state.fio=fio; state.email=email; state.phone=phone;
     if(!state.earned.some(function(x){return x.act==="reg";})) state.earned.unshift({act:"reg",pts:1,t:"11:02"});
     showWa("home"); syncNavFromScreen("home");
-    toast("Анкета сохранена · +1 балл");
+    toast("Данные сохранены · +1 балл");
+  },
+
+  surveySubmit:function(){
+    var faculty=($("#svFaculty")||{}).value||"", course=($("#svCourse")||{}).value||"", level=($("#svLevel")||{}).value||"", group=($("#svGroup")||{}).value||"";
+    var errors={};
+    if(!faculty.trim()) errors.faculty=true;
+    if(!course.trim()) errors.course=true;
+    if(!level) errors.level=true;
+    if(!group.trim()) errors.group=true;
+    if(Object.keys(errors).length){ showWa("survey",{errors:errors,notes:"wa-survey"}); markNav("waSurveyDemo"); return; }
+    state.survey={faculty:faculty,course:course,level:level,group:group};
+    if(!state.earned.some(function(x){return x.act==="survey";})) state.earned.push({act:"survey",pts:0,t:"14:50"});
+    showWa("profile"); syncNavFromScreen("profile");
+    toast("Анкета сохранена" + (actById("survey").pts==null ? " · баллы уточняются" : ""));
   },
 
   /* web app email */
@@ -1693,7 +1741,7 @@ var ACTIONS={
 };
 
 function syncNavFromScreen(id){
-  var map={home:"waHome",schedule:"waSchedule",activities:"waActivities",points:"waPoints",shop:"waShop",orders:"waOrders",workshops:"waWorkshops",profile:"waProfile",register:"waRegister",soon:"waSoon"};
+  var map={home:"waHome",schedule:"waSchedule",activities:"waActivities",points:"waPoints",shop:"waShop",orders:"waOrders",workshops:"waWorkshops",profile:"waProfile",register:"waRegister",survey:"waSurveyDemo",soon:"waSoon"};
   if(map[id]) markNav(map[id]);
 }
 function confirmConflict(){ return window.confirm("На это время у тебя уже есть запись. Перезаписаться на новую сессию?"); }

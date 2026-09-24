@@ -847,7 +847,7 @@ var NOTES = {
 
 "wa-survey":{ ico:"🏫", title:"Анкета студента",
   purpose:"Отдельная активность от базовой регистрации (см. ACTS: <code>reg</code> vs <code>survey</code>) — доп. вопросы про учёбу, чтобы точнее подбирать вакансии/стажировки: факультет, курс, уровень образования, учебная группа. За заполнение — <b>+5 баллов</b>. Необязательна, можно заполнить в любой момент.",
-  logic:["4 поля: <b>Факультет</b> (текст), <b>Курс</b> (текст/число), <b>Уровень образования</b> (выпадающий список: Бакалавриат / Специалитет / Магистратура), <b>Учебная группа</b> (текст).","Вход в этот экран — с двух мест: карточка прямо на <b>Главной</b> (см. wa-home) и карточка в <b>Профиле</b> (см. wa-profile). Один и тот же экран/состояние, просто два способа его найти — изначально был только в Профиле, но там его не находили, поэтому продублировали на Главную.","Не блокирует остальные разделы приложения — в отличие от базовой регистрации, тут можно просто не заходить.","+5 баллов начисляются автоматически при сохранении формы — пишем факт в <code>state.earned</code> как активность <code>survey</code>, повторно не начисляем при редактировании уже сохранённой анкеты."],
+  logic:["4 поля: <b>Факультет</b> (текст), <b>Курс</b> (текст/число), <b>Уровень образования</b> (выпадающий список: Бакалавриат / Специалитет / Магистратура), <b>Учебная группа</b> (текст).","Вход в этот экран — с двух мест: карточка прямо на <b>Главной</b> (см. wa-home) и карточка в <b>Профиле</b> (см. wa-profile). Один и тот же экран/состояние, просто два способа его найти — изначально был только в Профиле, но там его не находили, поэтому продублировали на Главную.","Не блокирует остальные разделы приложения — в отличие от базовой регистрации, тут можно просто не заходить.","+5 баллов начисляются автоматически при сохранении формы — пишем факт в <code>state.earned</code> как активность <code>survey</code>, повторно не начисляем при редактировании уже сохранённой анкеты.","После сохранения — тост «Данные сохранены, начислено +5 баллов» (при повторном сохранении/редактировании — «Анкета обновлена», без повторного начисления) и возврат на <b>Главную</b>, не в Профиль: в Профиле первым делом виден QR-код, а после заполнения анкеты показывать его не нужно."],
   states:[S("Не заполнено","карточки на Главной и в Профиле предлагают «Заполнить» + подсказку про +5 баллов","var(--warn)"),S("Заполнено","данные показаны, есть «Изменить», баллы уже начислены","var(--ok)")],
   open:[] },
 
@@ -1419,7 +1419,7 @@ function waSurveyForm(errors){
 function surveyCard(){
   var sv=state.survey||{}; var done=!!sv.faculty;
   return '<div class="card" style="margin-top:12px">'+
-    '<div class="row" style="border:0;padding:2px 0 0"><div class="r-ico">🏫</div><div class="r-m"><div class="r-t">Анкета студента</div><div class="r-s">'+(done?'Курс '+esc(sv.course)+' · '+esc(sv.level):'факультет, курс, уровень, группа · '+ptsLabel(actById("survey"))+' баллов')+'</div></div><div class="r-r">'+
+    '<div class="row" style="border:0;padding:2px 0 0"><div class="r-ico">🏫</div><div class="r-m"><div class="r-t">Анкета студента</div><div class="r-s">'+(done?'Курс '+esc(sv.course)+' · '+esc(sv.level):'Заполни анкету и получи '+ptsLabel(actById("survey"))+' баллов')+'</div></div><div class="r-r">'+
       (done
         ? '<button class="mainbtn sec" style="padding:9px 12px;font-size:13px" data-act="waTo" data-id="survey">Изменить</button>'
         : '<button class="mainbtn" style="padding:9px 12px;font-size:13px" data-act="waTo" data-id="survey">Заполнить</button>')+
@@ -1628,7 +1628,7 @@ function waProfile(){
     '<div class="card">'+
       (surveyDone
         ? '<div class="row"><div class="r-ico">🏫</div><div class="r-m"><div class="r-t">'+esc(sv.faculty)+'</div><div class="r-s">Курс '+esc(sv.course)+' · '+esc(sv.level)+' · группа '+esc(sv.group)+'</div></div><div class="r-r"><button class="bl-go" data-act="waTo" data-id="survey">Изменить ›</button></div></div>'
-        : '<div class="row"><div class="r-ico">🏫</div><div class="r-m"><div class="r-t">Факультет, курс, уровень, группа</div><div class="r-s">ещё не заполнено · '+ptsLabel(actById("survey"))+' баллов</div></div><div class="r-r"><button class="bl-go" data-act="waTo" data-id="survey">Заполнить ›</button></div></div>')+
+        : '<div class="row"><div class="r-ico">🏫</div><div class="r-m"><div class="r-t">Факультет, курс, уровень, группа</div><div class="r-s">Заполни анкету и получи '+ptsLabel(actById("survey"))+' баллов</div></div><div class="r-r"><button class="bl-go" data-act="waTo" data-id="survey">Заполнить ›</button></div></div>')+
     '</div>'+
     '<div class="sec-t">Согласия</div>'+
     '<div class="card"><div class="row"><div class="r-ico">🔒</div><div class="r-m"><div class="r-t">Обработка ПД</div></div><div class="r-r"><span class="chip ok">дано</span></div></div>'+
@@ -1718,9 +1718,10 @@ var ACTIONS={
     if(!group.trim()) errors.group=true;
     if(Object.keys(errors).length){ showWa("survey",{errors:errors,notes:"wa-survey"}); markNav("waSurveyDemo"); return; }
     state.survey={faculty:faculty,course:course,level:level,group:group};
-    if(!state.earned.some(function(x){return x.act==="survey";})) state.earned.push({act:"survey",pts:actById("survey").pts,t:"14:50"});
-    showWa("profile"); syncNavFromScreen("profile");
-    toast("Анкета сохранена · "+ptsLabel(actById("survey"))+" баллов");
+    var already=state.earned.some(function(x){return x.act==="survey";});
+    if(!already) state.earned.push({act:"survey",pts:actById("survey").pts,t:"14:50"});
+    showWa("home"); syncNavFromScreen("home");
+    toast(already ? "Анкета обновлена" : "Данные сохранены, начислено "+ptsLabel(actById("survey"))+" баллов");
   },
 
   /* web app email */
